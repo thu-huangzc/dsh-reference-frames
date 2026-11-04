@@ -1,17 +1,19 @@
-# DSH Plugin: Reference Frames
+# 【DSH Plugin】Reference Frames
 
-说一句你想要的感觉（或者贴一张图），它从真实动画里找出对味的参考帧，把看中的存进情绪板。
+描述想要的感觉，从真实动画里找出对味的参考帧，把看中的存进情绪板。
 
 ## 安装
 
-前提：DeepSeek Harness，以及一个 [FrameThrower](https://framethrower.ai) token（`ft_…`，免费注册）。
+前提：
+* DeepSeek Harness
+* [FrameThrower](https://framethrower.ai) token
 
 ```bash
 git clone git@github.com:thu-huangzc/dsh-reference-frames.git
 ln -s "$PWD/dsh-reference-frames" ~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames
 ```
 
-再让 profile 认识它——编辑 `~/.dsh/profiles/<profile>/package.json`：
+更新 profile，编辑 `~/.dsh/profiles/<profile>/package.json`：
 
 ```json
 {
