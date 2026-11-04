@@ -1,4 +1,4 @@
-# 参考帧 / Reference Frames
+# DSH Plugin: Reference Frames
 
 说一句你想要的感觉（或者贴一张图），它从真实动画里找出对味的参考帧，把看中的存进情绪板。
 
