@@ -75,13 +75,21 @@
 
 插件目录被软链接进当前 profile，宿主按 `cordis.patch.yml` 挂载：
 
+包名 / 仓库名：**dsh-reference-frames**（插件 id `reference-frames`）。
+
 ```
-~/.dsh/profiles/<profile>/node_modules/@local/dsh-anime-style-explorer
+~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames
   → …/default-workspace/anime-style-explorer
 ```
 
-换一台机器时，把本仓库放进任意目录，然后建同一条软链接（或把目录拷进 profile 的
-`node_modules/@local/`），重启 Harness 即可；面板入口在「参考帧」标签。
+换一台机器时，把本仓库放到任意目录，然后：
+
+```bash
+ln -s /path/to/dsh-reference-frames ~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames
+```
+
+重启 Harness 即可；面板入口在「参考帧」标签。`cordis.patch.yml` 会以
+`dsh-reference-frames` 这个名字插入插件，所以软链接名必须与 `package.json` 的 `name` 一致。
 
 ## 维护
 

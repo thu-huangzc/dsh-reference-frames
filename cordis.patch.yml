@@ -1,6 +1,6 @@
 - insert:
-    - id: anime-style-explorer
-      name: '@local/dsh-anime-style-explorer'
+    - id: reference-frames
+      name: 'dsh-reference-frames'
       config:
         apiToken: ''
         framesPerStyle: 6
