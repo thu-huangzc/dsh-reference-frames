@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Art Style Explorer">
+  <defs>
+    <linearGradient id="ase-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a5c"/>
+      <stop offset="0.52" stop-color="#e0547a"/>
+      <stop offset="1" stop-color="#5b5bd6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="#141320"/>
+  <rect x="9" y="14" width="46" height="30" rx="4" fill="url(#ase-g)"/>
+  <circle cx="24" cy="29" r="7" fill="#141320" opacity="0.55"/>
+  <path d="M38 22.5 50 29l-12 6.5z" fill="#141320" opacity="0.75"/>
+  <g fill="#f7f3ee">
+    <rect x="13" y="38" width="7" height="3" rx="1.5"/>
+    <rect x="23" y="38" width="7" height="3" rx="1.5"/>
+    <rect x="33" y="38" width="7" height="3" rx="1.5"/>
+    <rect x="43" y="38" width="7" height="3" rx="1.5"/>
+  </g>
+  <g>
+    <rect x="9" y="49" width="9" height="5" rx="2.5" fill="#ff8a5c"/>
+    <rect x="20.5" y="49" width="9" height="5" rx="2.5" fill="#f4c46a"/>
+    <rect x="32" y="49" width="9" height="5" rx="2.5" fill="#8fd3c1"/>
+    <rect x="43.5" y="49" width="9" height="5" rx="2.5" fill="#9a8cf0"/>
+  </g>
+</svg>

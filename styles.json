@@ -1,0 +1,2852 @@
+[
+ {
+  "id": "ghibli",
+  "group": "日本 · 主流",
+  "zh": "吉卜力 · 水彩自然",
+  "en": "Ghibli Watercolor",
+  "tagline": "手绘赛璐璐上铺水彩天空，风会吹过每一格画面",
+  "desc": "高密度手绘的角色叠在整幅水彩背景上，云、草、风都有实体重量；留白少，生活质感多，情绪靠天气与动作而不是台词。",
+  "era": "1980s—2010s",
+  "mood": [
+   "治愈",
+   "温暖",
+   "怀旧",
+   "童真",
+   "宁静"
+  ],
+  "genre": [
+   "奇幻",
+   "日常",
+   "冒险",
+   "成长",
+   "家庭"
+  ],
+  "tech": [
+   "手绘赛璐璐",
+   "水彩背景",
+   "全动画",
+   "高密度作画"
+  ],
+  "kw": [
+   "宫崎骏",
+   "高畑勋",
+   "自然",
+   "夏天",
+   "乡村",
+   "飞行",
+   "猫",
+   "欧洲小镇",
+   "魔法",
+   "风",
+   "ghibli",
+   "nature",
+   "childhood",
+   "summer",
+   "countryside",
+   "children",
+   "meadow"
+  ],
+  "palette": [
+   "#7fb069",
+   "#2f6b45",
+   "#f3e3b8",
+   "#ffd166",
+   "#8ecae6"
+  ],
+  "recipe": {
+   "line": "铅笔感细线，收笔略粗",
+   "shade": "赛璐璐两段阴影 + 水彩叠色",
+   "light": "午后侧逆光、云隙光，整体偏暖",
+   "lens": "温和广角，平视，愿意在一个镜头上停留",
+   "fx": "手绘云层、草叶与树叶的逐帧抖动"
+  },
+  "works": [
+   {
+    "t": "龙猫",
+    "y": 1988,
+    "s": "吉卜力"
+   },
+   {
+    "t": "千与千寻",
+    "y": 2001,
+    "s": "吉卜力"
+   },
+   {
+    "t": "幽灵公主",
+    "y": 1997,
+    "s": "吉卜力"
+   }
+  ],
+  "ft": {
+   "q": "children running through a summer meadow under towering cumulus clouds, countryside, warm afternoon",
+   "style": "hand-drawn cel, watercolour, detailed backgrounds, soft natural light"
+  },
+  "prompt": "anime film still, hand-drawn cel animation, watercolour painted backgrounds, towering cumulus clouds over a green summer meadow, warm afternoon backlight, gentle wind, 2D, soft grain",
+  "kin": [
+   "hosoda",
+   "watercolor",
+   "pastel"
+  ]
+ },
+ {
+  "id": "shinkai",
+  "group": "日本 · 主流",
+  "zh": "新海诚 · 通透光",
+  "en": "Shinkai Luminous",
+  "tagline": "天空比人物更重要，每一帧都像加了滤镜的实拍",
+  "desc": "数字作画加上摄影后期思维：逆光、光斑、云层与城市细节堆到极致，情绪由天气、时间和距离承载。",
+  "era": "2000s—now",
+  "mood": [
+   "思念",
+   "孤独",
+   "浪漫",
+   "遗憾",
+   "青春"
+  ],
+  "genre": [
+   "恋爱",
+   "都市",
+   "奇幻",
+   "成长"
+  ],
+  "tech": [
+   "数字 2D",
+   "摄影后期",
+   "光效",
+   "高细节背景"
+  ],
+  "kw": [
+   "新海诚",
+   "你的名字",
+   "天气之子",
+   "秒速五厘米",
+   "天空",
+   "云",
+   "光斑",
+   "逆光",
+   "雨",
+   "电车",
+   "黄昏",
+   "城市",
+   "shinkai",
+   "sky",
+   "rain",
+   "city",
+   "dusk"
+  ],
+  "palette": [
+   "#1b2a4a",
+   "#3f6fa8",
+   "#f2a5b8",
+   "#ffd9a0",
+   "#8fd3ff"
+  ],
+  "recipe": {
+   "line": "几乎不见线，靠色块与高光塑形",
+   "shade": "软阴影 + 冷紫补光",
+   "light": "逆光轮廓、镜头光斑、体积光",
+   "lens": "长焦压缩 + 大光圈虚化",
+   "fx": "光线拉丝、雨滴、镜头脏点"
+  },
+  "works": [
+   {
+    "t": "你的名字。",
+    "y": 2016,
+    "s": "CoMix Wave"
+   },
+   {
+    "t": "天气之子",
+    "y": 2019,
+    "s": "CoMix Wave"
+   },
+   {
+    "t": "秒速五厘米",
+    "y": 2007,
+    "s": "CoMix Wave"
+   }
+  ],
+  "ft": {
+   "q": "two people on a train crossing at dusk, city lights, dramatic clouds, lens flare",
+   "style": "digital 2D, vivid, detailed backgrounds, glow and bloom, soft natural light"
+  },
+  "prompt": "anime film still, hyper-detailed sky, lens flare, volumetric light, dusk city, shallow depth of field, photorealistic background painting, 2D animation",
+  "kin": [
+   "kyoani",
+   "yamada",
+   "y2k"
+  ]
+ },
+ {
+  "id": "hosoda",
+  "group": "日本 · 主流",
+  "zh": "细田守 · 扁平温度",
+  "en": "Hosoda Flat Warmth",
+  "tagline": "大色块与干净线条，把日常拍成有节奏的冒险",
+  "desc": "平涂大色块、简洁线条、极强的时间与动作节奏；人物表情克制，靠身体、距离与空间讲故事。",
+  "era": "2000s—now",
+  "mood": [
+   "温柔",
+   "家庭",
+   "成长",
+   "元气"
+  ],
+  "genre": [
+   "日常",
+   "家庭",
+   "奇幻",
+   "运动"
+  ],
+  "tech": [
+   "数字 2D",
+   "平涂",
+   "有限动画",
+   "强动作"
+  ],
+  "kw": [
+   "细田守",
+   "穿越时空的少女",
+   "夏日大作战",
+   "狼的孩子",
+   "家族",
+   "乡下",
+   "夏天",
+   "奔跑",
+   "hosoda",
+   "family",
+   "summer"
+  ],
+  "palette": [
+   "#f4a261",
+   "#e76f51",
+   "#2a9d8f",
+   "#e9c46a",
+   "#264653"
+  ],
+  "recipe": {
+   "line": "均匀细线，转折柔和",
+   "shade": "两段平涂，阴影边缘干净",
+   "light": "大片均匀日光，少特效",
+   "lens": "中景为主，横向调度",
+   "fx": "少用光效，靠构图与动作"
+  },
+  "works": [
+   {
+    "t": "穿越时空的少女",
+    "y": 2006,
+    "s": "Madhouse"
+   },
+   {
+    "t": "夏日大作战",
+    "y": 2009,
+    "s": "Madhouse"
+   },
+   {
+    "t": "狼的孩子雨和雪",
+    "y": 2012,
+    "s": "Studio Chizu"
+   }
+  ],
+  "ft": {
+   "q": "family walking a rural road in summer, wide open sky, simple flat colors",
+   "style": "digital 2D, clean lines, vivid, soft natural light"
+  },
+  "prompt": "anime film still, flat color blocks, clean thin outlines, rural summer landscape, wide shot, warm daylight, 2D cel animation",
+  "kin": [
+   "ghibli",
+   "kyoani",
+   "flat"
+  ]
+ },
+ {
+  "id": "yuasa",
+  "group": "日本 · 作者",
+  "zh": "汤浅政明 · 变形表现",
+  "en": "Yuasa Elastic Expression",
+  "tagline": "透视会呼吸，情绪用整条肢体画出来",
+  "desc": "造型随时可以被情绪拉长、压扁、扭曲；镜头自由，运动夸张，画面像直接手写在纸上。",
+  "era": "2000s—now",
+  "mood": [
+   "荒诞",
+   "狂喜",
+   "迷幻",
+   "躁动"
+  ],
+  "genre": [
+   "奇幻",
+   "音乐",
+   "实验",
+   "青春"
+  ],
+  "tech": [
+   "手绘",
+   "变形",
+   "夸张透视",
+   "高帧率"
+  ],
+  "kw": [
+   "汤浅政明",
+   "四叠半",
+   "恶魔人",
+   "春宵苦短",
+   "乒乓球",
+   "变形",
+   "实验",
+   "意识流",
+   "yuasa",
+   "surreal",
+   "experimental"
+  ],
+  "palette": [
+   "#ff4d6d",
+   "#ffd23f",
+   "#00b4d8",
+   "#7b2cbf",
+   "#f8f9fa"
+  ],
+  "recipe": {
+   "line": "粗细分明的速写线，会抖",
+   "shade": "随情绪乱跑的色块阴影",
+   "light": "硬光与纯色背景并用",
+   "lens": "广角畸变、俯仰大角度",
+   "fx": "形变、拖影、画面材质切换"
+  },
+  "works": [
+   {
+    "t": "四叠半神话大系",
+    "y": 2010,
+    "s": "Madhouse"
+   },
+   {
+    "t": "春宵苦短，少女前进吧！",
+    "y": 2017,
+    "s": "Science SARU"
+   },
+   {
+    "t": "恶魔人 Crybaby",
+    "y": 2018,
+    "s": "Science SARU"
+   }
+  ],
+  "ft": {
+   "q": "a character sprinting through a distorted city street, exaggerated perspective",
+   "style": "hand-drawn cel, sketchy lines, vivid, high-contrast shadows"
+  },
+  "prompt": "anime key frame, exaggerated perspective distortion, loose sketchy linework, saturated flat colors, dynamic motion smear, hand-drawn 2D",
+  "kin": [
+   "trigger",
+   "anno",
+   "mono"
+  ]
+ },
+ {
+  "id": "kon",
+  "group": "日本 · 作者",
+  "zh": "今敏 · 心理剪辑",
+  "en": "Kon Psychological Cut",
+  "tagline": "现实与梦境共用一条剪辑线",
+  "desc": "写实比例的人物在精确的空间里移动，用匹配剪辑、镜像与重复把心理状态做成结构，而不是台词。",
+  "era": "1990s—2010s",
+  "mood": [
+   "梦魇",
+   "不安",
+   "迷离",
+   "孤独"
+  ],
+  "genre": [
+   "心理",
+   "悬疑",
+   "都市",
+   "剧情"
+  ],
+  "tech": [
+   "写实比例",
+   "实拍式剪辑",
+   "转场设计"
+  ],
+  "kw": [
+   "今敏",
+   "未麻的部屋",
+   "千年女优",
+   "红辣椒",
+   "梦境",
+   "剪辑",
+   "心理",
+   "都市",
+   "kon",
+   "dream",
+   "psychological",
+   "thriller"
+  ],
+  "palette": [
+   "#2b2d42",
+   "#8d99ae",
+   "#ef233c",
+   "#edf2f4",
+   "#d90429"
+  ],
+  "recipe": {
+   "line": "写实细线，人物比例接近真人",
+   "shade": "柔和过渡阴影，写实质感",
+   "light": "室内实用光源，偏冷",
+   "lens": "标准镜头，精确轴线",
+   "fx": "匹配剪辑、镜像、场景无缝切换"
+  },
+  "works": [
+   {
+    "t": "未麻的部屋",
+    "y": 1997,
+    "s": "Madhouse"
+   },
+   {
+    "t": "千年女优",
+    "y": 2001,
+    "s": "Madhouse"
+   },
+   {
+    "t": "红辣椒",
+    "y": 2006,
+    "s": "Madhouse"
+   }
+  ],
+  "ft": {
+   "q": "a woman alone in a corridor that repeats into infinity, city night behind glass",
+   "style": "digital 2D, realistic proportions, cool, detailed backgrounds, film grain"
+  },
+  "prompt": "anime film still, realistic proportions, surreal seamless transition, repeating corridor, cool interior light, cinematic composition, 2D",
+  "kin": [
+   "oshii",
+   "mono",
+   "mappa"
+  ]
+ },
+ {
+  "id": "oshii",
+  "group": "日本 · 作者",
+  "zh": "押井守 · 静默科幻",
+  "en": "Oshii Contemplative Sci-fi",
+  "tagline": "城市比人更大，沉默比台词更响",
+  "desc": "长镜头、静帧与密集的机械与城市细节，人物被环境压小；留白、雨声与配乐承担叙事。",
+  "era": "1980s—2010s",
+  "mood": [
+   "疏离",
+   "沉思",
+   "冷",
+   "孤独"
+  ],
+  "genre": [
+   "科幻",
+   "赛博",
+   "军事",
+   "哲学"
+  ],
+  "tech": [
+   "数字 2D",
+   "长镜头",
+   "静帧",
+   "高细节"
+  ],
+  "kw": [
+   "押井守",
+   "攻壳机动队",
+   "机动警察",
+   "赛博",
+   "城市",
+   "雨",
+   "机械",
+   "哲学",
+   "长镜头",
+   "oshii",
+   "philosophy",
+   "cyberpunk"
+  ],
+  "palette": [
+   "#0b132b",
+   "#1c2541",
+   "#3a506b",
+   "#5bc0be",
+   "#e0e1dd"
+  ],
+  "recipe": {
+   "line": "细密写实线，机械结构清晰",
+   "shade": "冷灰阶 + 少量饱和点缀",
+   "light": "阴天、霓虹、屏幕光",
+   "lens": "长焦静观，缓慢横移",
+   "fx": "雨、蒸汽、鸟群、字幕插入"
+  },
+  "works": [
+   {
+    "t": "攻壳机动队",
+    "y": 1995,
+    "s": "Production I.G"
+   },
+   {
+    "t": "攻壳机动队 2 无罪",
+    "y": 2004,
+    "s": "Production I.G"
+   },
+   {
+    "t": "机动警察 2",
+    "y": 1993,
+    "s": "Production I.G"
+   }
+  ],
+  "ft": {
+   "q": "a lone figure on a rain-soaked rooftop overlooking a dense futuristic city at night",
+   "style": "digital 2D, cool, dark, detailed backgrounds, film grain"
+  },
+  "prompt": "anime film still, rain-soaked cyberpunk city, muted cyan and grey palette, long lens, dense mechanical detail, contemplative composition, 2D",
+  "kin": [
+   "ig",
+   "kon",
+   "neon"
+  ]
+ },
+ {
+  "id": "kyoani",
+  "group": "日本 · 主流",
+  "zh": "京都动画 · 细腻日常",
+  "en": "KyoAni Delicate Slice",
+  "tagline": "把「没什么发生」画得值得看",
+  "desc": "极高密度的作画与真实日常动作：走路、摆餐具、风吹头发；情绪藏在微小动作与空间关系里。",
+  "era": "2000s—now",
+  "mood": [
+   "温柔",
+   "日常",
+   "青春",
+   "安静"
+  ],
+  "genre": [
+   "校园",
+   "日常",
+   "音乐",
+   "成长"
+  ],
+  "tech": [
+   "高密度作画",
+   "手绘",
+   "细节演出"
+  ],
+  "kw": [
+   "京都动画",
+   "京阿尼",
+   "轻音少女",
+   "冰菓",
+   "上低音号",
+   "校园",
+   "社团",
+   "日常",
+   "细节",
+   "kyoani",
+   "school",
+   "slice of life"
+  ],
+  "palette": [
+   "#f7cad0",
+   "#bde0fe",
+   "#a2d2ff",
+   "#ffd6a5",
+   "#cdb4db"
+  ],
+  "recipe": {
+   "line": "细而稳的线，发丝分明",
+   "shade": "柔和两段阴影，肤色通透",
+   "light": "窗光、黄昏、柔逆光",
+   "lens": "中近景，浅景深，慢推",
+   "fx": "光斑、尘埃、衣料与发丝动画"
+  },
+  "works": [
+   {
+    "t": "轻音少女",
+    "y": 2009,
+    "s": "京都动画"
+   },
+   {
+    "t": "冰菓",
+    "y": 2012,
+    "s": "京都动画"
+   },
+   {
+    "t": "吹响吧！上低音号",
+    "y": 2015,
+    "s": "京都动画"
+   }
+  ],
+  "ft": {
+   "q": "a schoolgirl pouring tea in a sunlit club room, dust motes in the light",
+   "style": "digital 2D, clean lines, soft natural light, pastel, detailed backgrounds"
+  },
+  "prompt": "anime film still, sunlit classroom, dust motes, soft rim light, delicate character acting, pastel palette, 2D cel animation",
+  "kin": [
+   "yamada",
+   "shinkai",
+   "moe"
+  ]
+ },
+ {
+  "id": "yamada",
+  "group": "日本 · 作者",
+  "zh": "山田尚子 · 柔焦青春",
+  "en": "Yamada Soft Focus",
+  "tagline": "镜头不看脸，看脚、看手、看光",
+  "desc": "浅景深与柔焦，长时间停留在身体局部；情绪靠距离、错位与被挡住的脸传达。",
+  "era": "2010s—now",
+  "mood": [
+   "暧昧",
+   "悸动",
+   "柔软",
+   "遗憾"
+  ],
+  "genre": [
+   "校园",
+   "青春",
+   "音乐",
+   "恋爱"
+  ],
+  "tech": [
+   "柔焦",
+   "浅景深",
+   "局部特写"
+  ],
+  "kw": [
+   "山田尚子",
+   "声之形",
+   "利兹与青鸟",
+   "玉子市场",
+   "青春",
+   "校园",
+   "柔焦",
+   "腿部特写",
+   "yamada",
+   "youth",
+   "school"
+  ],
+  "palette": [
+   "#ffe5ec",
+   "#ffc2d1",
+   "#bde0fe",
+   "#ffe8c2",
+   "#a3c4f3"
+  ],
+  "recipe": {
+   "line": "极细线，轮廓会被光吃掉",
+   "shade": "大面积柔光过渡，几乎无硬阴影",
+   "light": "逆光、窗光、过曝高光",
+   "lens": "浅景深长焦，虚化前景",
+   "fx": "光晕、柔焦、轻颗粒"
+  },
+  "works": [
+   {
+    "t": "声之形",
+    "y": 2016,
+    "s": "京都动画"
+   },
+   {
+    "t": "利兹与青鸟",
+    "y": 2018,
+    "s": "京都动画"
+   },
+   {
+    "t": "玉子市场",
+    "y": 2013,
+    "s": "京都动画"
+   }
+  ],
+  "ft": {
+   "q": "two girls walking through a school corridor, shallow focus, soft light",
+   "style": "digital 2D, pastel, soft natural light, glow and bloom"
+  },
+  "prompt": "anime film still, shallow depth of field, soft focus, pale pastel palette, backlit corridor, intimate framing, 2D",
+  "kin": [
+   "kyoani",
+   "pastel",
+   "shoujo"
+  ]
+ },
+ {
+  "id": "trigger",
+  "group": "日本 · 类型",
+  "zh": "Trigger · 高张力作画",
+  "en": "Trigger Kinetic Pop",
+  "tagline": "每一帧都在超频",
+  "desc": "夸张到失控的动作与色彩爆发，关键段落的作画张数突然拉满，视觉噪音本身就是情绪。",
+  "era": "2010s—now",
+  "mood": [
+   "燃",
+   "荒诞",
+   "能量",
+   "躁动"
+  ],
+  "genre": [
+   "动作",
+   "科幻",
+   "喜剧",
+   "冒险"
+  ],
+  "tech": [
+   "夸张作画",
+   "色彩爆发",
+   "变形"
+  ],
+  "kw": [
+   "扳机社",
+   "天元突破",
+   "斩服少女",
+   "小魔女学园",
+   "边缘行者",
+   "燃",
+   "动作",
+   "夸张",
+   "trigger",
+   "kinetic",
+   "action"
+  ],
+  "palette": [
+   "#ff006e",
+   "#ffbe0b",
+   "#3a86ff",
+   "#8338ec",
+   "#ffffff"
+  ],
+  "recipe": {
+   "line": "粗黑线 + 彩色描边，敢于崩坏",
+   "shade": "高对比硬阴影",
+   "light": "爆炸光、色块背景",
+   "lens": "极广角、倾斜构图",
+   "fx": "冲击帧、速度线、色彩闪烁"
+  },
+  "works": [
+   {
+    "t": "天元突破红莲螺岩",
+    "y": 2007,
+    "s": "GAINAX"
+   },
+   {
+    "t": "斩服少女",
+    "y": 2013,
+    "s": "Trigger"
+   },
+   {
+    "t": "赛博朋克：边缘行者",
+    "y": 2022,
+    "s": "Trigger"
+   }
+  ],
+  "ft": {
+   "q": "a character mid-sprint with explosive energy lines, dramatic low angle",
+   "style": "hand-drawn cel, vivid, thick outlines, high-contrast shadows"
+  },
+  "prompt": "anime action key frame, extreme perspective, thick outlines, saturated color explosion, impact frame, speed lines, 2D",
+  "kin": [
+   "yuasa",
+   "shonen",
+   "anno"
+  ]
+ },
+ {
+  "id": "anno",
+  "group": "日本 · 作者",
+  "zh": "庵野秀明 · 静止演出",
+  "en": "Anno Static Direction",
+  "tagline": "让画面停住，让文字说话",
+  "desc": "大量静止帧、实拍素材拼贴、黑底白字；把预算限制变成一种冷峻的表达方式，节奏靠停顿制造压强。",
+  "era": "1990s—now",
+  "mood": [
+   "压抑",
+   "焦虑",
+   "孤独",
+   "末日"
+  ],
+  "genre": [
+   "机甲",
+   "心理",
+   "宗教",
+   "科幻"
+  ],
+  "tech": [
+   "静止帧",
+   "文字排版",
+   "实拍拼贴"
+  ],
+  "kw": [
+   "庵野秀明",
+   "EVA",
+   "新世纪福音战士",
+   "静止",
+   "意识流",
+   "文字",
+   "末日",
+   "心理",
+   "anno",
+   "psychological",
+   "apocalypse"
+  ],
+  "palette": [
+   "#0d0d0d",
+   "#ffffff",
+   "#c1121f",
+   "#6a040f",
+   "#adb5bd"
+  ],
+  "recipe": {
+   "line": "线宽随情绪变化，会断",
+   "shade": "大块纯黑与纯白",
+   "light": "硬顶光、逆光剪影",
+   "lens": "固定机位长停留",
+   "fx": "静止帧、闪光字幕、实拍插入"
+  },
+  "works": [
+   {
+    "t": "新世纪福音战士",
+    "y": 1995,
+    "s": "GAINAX"
+   },
+   {
+    "t": "真心为你",
+    "y": 1997,
+    "s": "GAINAX"
+   },
+   {
+    "t": "新·福音战士剧场版",
+    "y": 2021,
+    "s": "khara"
+   }
+  ],
+  "ft": {
+   "q": "a figure silhouetted against a stark white screen, minimal set, hard light",
+   "style": "hand-drawn cel, high-contrast shadows, monochrome, flat minimal"
+  },
+  "prompt": "anime still, stark silhouette, negative space, hard directional light, bold typography overlay, 2D",
+  "kin": [
+   "kon",
+   "mono",
+   "trigger"
+  ]
+ },
+ {
+  "id": "ig",
+  "group": "日本 · 类型",
+  "zh": "Production I.G · 硬派赛博",
+  "en": "I.G. Hard-edge Cyber",
+  "tagline": "冷、硬、精密",
+  "desc": "写实人物 + 硬边阴影 + 军事与科技细节，镜头语言接近实拍动作片，信息密度高而不炫技。",
+  "era": "1990s—now",
+  "mood": [
+   "冷峻",
+   "阴郁",
+   "紧张"
+  ],
+  "genre": [
+   "科幻",
+   "赛博",
+   "动作",
+   "政治"
+  ],
+  "tech": [
+   "写实",
+   "高对比",
+   "高细节"
+  ],
+  "kw": [
+   "攻壳",
+   "心理测量者",
+   "巨人",
+   "硬派",
+   "军事",
+   "赛博",
+   "ig",
+   "cyber",
+   "military"
+  ],
+  "palette": [
+   "#101820",
+   "#2f4550",
+   "#586f7c",
+   "#b8dbd9",
+   "#f4f4f9"
+  ],
+  "recipe": {
+   "line": "精确细线，写实结构",
+   "shade": "硬边阴影 + 冷灰阶",
+   "light": "冷白、屏幕光、阴天",
+   "lens": "手持感、快速摇移",
+   "fx": "枪火、玻璃、雨"
+  },
+  "works": [
+   {
+    "t": "攻壳机动队 STAND ALONE COMPLEX",
+    "y": 2002,
+    "s": "Production I.G"
+   },
+   {
+    "t": "心理测量者",
+    "y": 2012,
+    "s": "Production I.G"
+   },
+   {
+    "t": "进击的巨人",
+    "y": 2013,
+    "s": "WIT"
+   }
+  ],
+  "ft": {
+   "q": "a tactical squad moving through a rain-soaked industrial district at night",
+   "style": "digital 2D, realistic proportions, cool, high-contrast shadows"
+  },
+  "prompt": "anime film still, realistic proportions, cold cyan-grey palette, hard shadows, industrial night, cinematic 2D",
+  "kin": [
+   "oshii",
+   "mappa",
+   "madhouse"
+  ]
+ },
+ {
+  "id": "madhouse",
+  "group": "日本 · 类型",
+  "zh": "Madhouse · 凌厉动作",
+  "en": "Madhouse Lean Action",
+  "tagline": "省下来的张数，全用在刀刃上",
+  "desc": "低张数配精准关键帧，动作段落靠构图与冲击帧发力；整体冷、利落，人物永远在压力下。",
+  "era": "1990s—2010s",
+  "mood": [
+   "紧张",
+   "冷",
+   "凌厉"
+  ],
+  "genre": [
+   "动作",
+   "格斗",
+   "惊悚",
+   "体育"
+  ],
+  "tech": [
+   "低张数",
+   "冲击帧",
+   "硬构图"
+  ],
+  "kw": [
+   "疯屋",
+   "一拳超人",
+   "死亡笔记",
+   "剑风传奇",
+   "动作",
+   "格斗",
+   "madhouse",
+   "action"
+  ],
+  "palette": [
+   "#1a1a1a",
+   "#3d3d3d",
+   "#d62828",
+   "#f77f00",
+   "#eae2b7"
+  ],
+  "recipe": {
+   "line": "硬朗粗线，结构清晰",
+   "shade": "强对比两块阴影",
+   "light": "侧硬光、剪影",
+   "lens": "低角度、突然推近",
+   "fx": "冲击帧、黑白闪、定格"
+  },
+  "works": [
+   {
+    "t": "一拳超人",
+    "y": 2015,
+    "s": "Madhouse"
+   },
+   {
+    "t": "死亡笔记",
+    "y": 2006,
+    "s": "Madhouse"
+   },
+   {
+    "t": "剑风传奇",
+    "y": 1997,
+    "s": "OLM"
+   }
+  ],
+  "ft": {
+   "q": "a fighter lunging forward, low angle, hard side light, dramatic silhouette",
+   "style": "hand-drawn cel, high-contrast shadows, gritty mature, 2000s look"
+  },
+  "prompt": "anime action frame, hard side light, strong silhouette, gritty 2D, impact composition",
+  "kin": [
+   "mappa",
+   "ig",
+   "shonen"
+  ]
+ },
+ {
+  "id": "mappa",
+  "group": "日本 · 类型",
+  "zh": "MAPPA · 当代锐利",
+  "en": "MAPPA Contemporary Sharp",
+  "tagline": "当代动画的锐度",
+  "desc": "数字作画下的高对比与高速剪辑，动作段落常有实拍级镜头逻辑，人物情绪一直绷着。",
+  "era": "2010s—now",
+  "mood": [
+   "躁动",
+   "残酷",
+   "张力"
+  ],
+  "genre": [
+   "动作",
+   "黑暗奇幻",
+   "体育",
+   "剧情"
+  ],
+  "tech": [
+   "数字 2D",
+   "高对比",
+   "快速剪辑"
+  ],
+  "kw": [
+   "咒术回战",
+   "电锯人",
+   "地狱乐",
+   "进击的巨人最终季",
+   "动作",
+   "黑暗",
+   "mappa",
+   "action",
+   "dark"
+  ],
+  "palette": [
+   "#12100e",
+   "#2b2118",
+   "#c9184a",
+   "#ffcc00",
+   "#e5e5e5"
+  ],
+  "recipe": {
+   "line": "锐利细线，动作中会断开",
+   "shade": "数字渐变 + 硬边混合",
+   "light": "强反差，血色与冷蓝对撞",
+   "lens": "手持、快速摇镜、特写切",
+   "fx": "血、尘埃、镜头畸变"
+  },
+  "works": [
+   {
+    "t": "咒术回战",
+    "y": 2020,
+    "s": "MAPPA"
+   },
+   {
+    "t": "电锯人",
+    "y": 2022,
+    "s": "MAPPA"
+   },
+   {
+    "t": "进击的巨人 最终季",
+    "y": 2020,
+    "s": "MAPPA"
+   }
+  ],
+  "ft": {
+   "q": "two fighters colliding in a ruined street, debris in the air, harsh light",
+   "style": "digital 2D, dark, high-contrast shadows, vivid"
+  },
+  "prompt": "anime action still, harsh contrast, debris and motion, dark palette with red accent, digital 2D",
+  "kin": [
+   "madhouse",
+   "ig",
+   "trigger"
+  ]
+ },
+ {
+  "id": "ufotable",
+  "group": "日本 · 类型",
+  "zh": "ufotable · 数字特效",
+  "en": "ufotable Digital VFX",
+  "tagline": "数字特效的极致华丽",
+  "desc": "2D 人物加上 3D 场景与粒子特效合成，光效与镜头运动极其电影化，战斗像烟花。",
+  "era": "2010s—now",
+  "mood": [
+   "华丽",
+   "史诗",
+   "燃烧"
+  ],
+  "genre": [
+   "奇幻",
+   "战斗",
+   "神话"
+  ],
+  "tech": [
+   "3D 合成",
+   "光效",
+   "粒子",
+   "摄影"
+  ],
+  "kw": [
+   "飞碟社",
+   "鬼灭之刃",
+   "fate",
+   "空之境界",
+   "特效",
+   "光",
+   "战斗",
+   "ufotable",
+   "vfx",
+   "battle"
+  ],
+  "palette": [
+   "#0b090a",
+   "#161a1d",
+   "#660708",
+   "#e5383b",
+   "#f5f3f4"
+  ],
+  "recipe": {
+   "line": "细线 + 发光描边",
+   "shade": "强光溢出，边缘发亮",
+   "light": "体积光、火花、水面反射",
+   "lens": "环绕运镜、速度线拉丝",
+   "fx": "粒子、刀光、水与火"
+  },
+  "works": [
+   {
+    "t": "鬼灭之刃",
+    "y": 2019,
+    "s": "ufotable"
+   },
+   {
+    "t": "Fate/Zero",
+    "y": 2011,
+    "s": "ufotable"
+   },
+   {
+    "t": "空之境界",
+    "y": 2007,
+    "s": "ufotable"
+   }
+  ],
+  "ft": {
+   "q": "a swordsman surrounded by glowing embers and light trails at night",
+   "style": "digital 2D, glow and bloom, vivid, dark"
+  },
+  "prompt": "anime battle still, volumetric light, glowing particles, sword trail, dark background, cinematic 2D/3D composite",
+  "kin": [
+   "trigger",
+   "mappa",
+   "ig"
+  ]
+ },
+ {
+  "id": "cel90",
+  "group": "年代",
+  "zh": "90 年代赛璐璐",
+  "en": "90s Cel",
+  "tagline": "赛璐璐时代的颗粒感",
+  "desc": "手绘赛璐璐、网点与高光贴片的年代质感；颜色略脏，线条有手工误差，构图更敢留空。",
+  "era": "1990s",
+  "mood": [
+   "怀旧",
+   "都市",
+   "冷调",
+   "青春"
+  ],
+  "genre": [
+   "科幻",
+   "都市",
+   "少年",
+   "恋爱"
+  ],
+  "tech": [
+   "赛璐璐",
+   "网点",
+   "胶片颗粒"
+  ],
+  "kw": [
+   "90年代",
+   "赛璐璐",
+   "复古",
+   "星际牛仔",
+   "美少女战士",
+   "灌篮高手",
+   "老动画",
+   "90s",
+   "retro"
+  ],
+  "palette": [
+   "#2b2d42",
+   "#8d99ae",
+   "#ef233c",
+   "#ffb703",
+   "#edf2f4"
+  ],
+  "recipe": {
+   "line": "手绘墨线，粗细不均",
+   "shade": "赛璐璐硬边阴影 + 网点",
+   "light": "高光贴片、逆光白边",
+   "lens": "标准镜头，静止构图多",
+   "fx": "胶片颗粒、划痕、色偏"
+  },
+  "works": [
+   {
+    "t": "星际牛仔",
+    "y": 1998,
+    "s": "Sunrise"
+   },
+   {
+    "t": "新世纪福音战士",
+    "y": 1995,
+    "s": "GAINAX"
+   },
+   {
+    "t": "灌篮高手",
+    "y": 1993,
+    "s": "东映"
+   }
+  ],
+  "ft": {
+   "q": "a city street at night in the nineties, neon signs, a lone character walking",
+   "style": "90s look, hand-drawn cel, film grain, muted"
+  },
+  "prompt": "anime still, 1990s cel animation, hand-painted background, film grain, slightly faded colors, 4:3 framing",
+  "kin": [
+   "retro80",
+   "gekiga70",
+   "neon"
+  ]
+ },
+ {
+  "id": "retro80",
+  "group": "年代",
+  "zh": "80 年代复古",
+  "en": "80s Retro Anime",
+  "tagline": "泡沫年代的饱和与浪漫",
+  "desc": "高饱和、粗线条、机械设定繁复；光影夸张，作画与音乐都追求「再大一点」。",
+  "era": "1980s",
+  "mood": [
+   "复古",
+   "热血",
+   "浪漫",
+   "未来"
+  ],
+  "genre": [
+   "科幻",
+   "机甲",
+   "运动",
+   "冒险"
+  ],
+  "tech": [
+   "赛璐璐",
+   "高饱和",
+   "胶片颗粒"
+  ],
+  "kw": [
+   "80年代",
+   "复古",
+   "高达",
+   "超时空要塞",
+   "城市猎人",
+   "泡沫经济",
+   "老动画",
+   "80s",
+   "retro"
+  ],
+  "palette": [
+   "#ff006e",
+   "#fb5607",
+   "#ffbe0b",
+   "#3a86ff",
+   "#8338ec"
+  ],
+  "recipe": {
+   "line": "粗黑线，机械线条密集",
+   "shade": "高饱和硬阴影",
+   "light": "霓虹、激光、爆炸",
+   "lens": "广角、仰拍",
+   "fx": "光学合成、光晕、颗粒"
+  },
+  "works": [
+   {
+    "t": "机动战士高达 逆袭的夏亚",
+    "y": 1988,
+    "s": "Sunrise"
+   },
+   {
+    "t": "超时空要塞 可曾记得爱",
+    "y": 1984,
+    "s": "龙之子"
+   },
+   {
+    "t": "阿基拉",
+    "y": 1988,
+    "s": "东宝"
+   }
+  ],
+  "ft": {
+   "q": "a pilot in a cockpit, neon cockpit lights, dramatic angle",
+   "style": "80s look, hand-drawn cel, vivid, film grain"
+  },
+  "prompt": "anime still, 1980s cel animation, saturated neon, dense mechanical detail, film grain, dramatic low angle",
+  "kin": [
+   "cel90",
+   "gekiga70",
+   "neon"
+  ]
+ },
+ {
+  "id": "gekiga70",
+  "group": "年代",
+  "zh": "70 年代剧画",
+  "en": "70s Gekiga",
+  "tagline": "剧画的重量",
+  "desc": "粗线、厚阴影、写实人体与沉重题材；画面脏而有力，动作有物理重量。",
+  "era": "1970s",
+  "mood": [
+   "沉重",
+   "写实",
+   "硬派"
+  ],
+  "genre": [
+   "历史",
+   "犯罪",
+   "体育",
+   "剧情"
+  ],
+  "tech": [
+   "剧画",
+   "粗线",
+   "重阴影"
+  ],
+  "kw": [
+   "70年代",
+   "剧画",
+   "写实",
+   "硬派",
+   "拳击",
+   "犯罪",
+   "老动画",
+   "70s",
+   "gritty"
+  ],
+  "palette": [
+   "#1c1c1c",
+   "#4a4a4a",
+   "#8b5e34",
+   "#c9a227",
+   "#efe6dd"
+  ],
+  "recipe": {
+   "line": "粗重墨线，笔触明显",
+   "shade": "大面积排线阴影",
+   "light": "顶光、强侧光",
+   "lens": "中景，写实透视",
+   "fx": "颗粒、纸张纹理"
+  },
+  "works": [
+   {
+    "t": "明日之丈",
+    "y": 1970,
+    "s": "虫制作"
+   },
+   {
+    "t": "鲁邦三世",
+    "y": 1971,
+    "s": "A Production"
+   },
+   {
+    "t": "凡尔赛玫瑰",
+    "y": 1979,
+    "s": "东京电影"
+   }
+  ],
+  "ft": {
+   "q": "a boxer resting in a dim gym, heavy shadows, sweat",
+   "style": "70s look, hand-drawn cel, gritty mature, muted, film grain"
+  },
+  "prompt": "anime still, 1970s gekiga style, heavy ink lines, harsh shadow, muted earthy palette, film grain",
+  "kin": [
+   "cel90",
+   "retro80",
+   "mono"
+  ]
+ },
+ {
+  "id": "y2k",
+  "group": "年代",
+  "zh": "千禧数字",
+  "en": "2000s Digital Transition",
+  "tagline": "千禧年的数字冷光",
+  "desc": "早期 3D 与数字 2D 混用，金属高光、冷色渐变与「未来感」界面设计。",
+  "era": "2000s",
+  "mood": [
+   "电子",
+   "未来",
+   "冷光",
+   "迷幻"
+  ],
+  "genre": [
+   "科幻",
+   "动作",
+   "赛博"
+  ],
+  "tech": [
+   "早期 3D",
+   "数字 2D",
+   "金属高光"
+  ],
+  "kw": [
+   "2000年代",
+   "千禧",
+   "数字",
+   "早期3D",
+   "未来感",
+   "y2k",
+   "digital"
+  ],
+  "palette": [
+   "#0b132b",
+   "#1c2541",
+   "#5bc0be",
+   "#6fffe9",
+   "#e0fbfc"
+  ],
+  "recipe": {
+   "line": "细线 + 发光边缘",
+   "shade": "数字渐变，金属反射",
+   "light": "冷色环境光、屏幕光",
+   "lens": "CG 摇镜、旋转",
+   "fx": "全息界面、数据流、镜头光晕"
+  },
+  "works": [
+   {
+    "t": "攻壳机动队 2 无罪",
+    "y": 2004,
+    "s": "Production I.G"
+   },
+   {
+    "t": "苹果核战记",
+    "y": 2004,
+    "s": "APPLESEED"
+   },
+   {
+    "t": "蒸汽男孩",
+    "y": 2004,
+    "s": "大友克洋"
+   }
+  ],
+  "ft": {
+   "q": "a figure standing in a chrome corridor with holographic displays",
+   "style": "2000s look, digital 2D, cool, glow and bloom"
+  },
+  "prompt": "anime still, early 2000s digital 3D look, chrome and cyan gradients, holographic UI, cool lighting",
+  "kin": [
+   "ig",
+   "neon",
+   "oshii"
+  ]
+ },
+ {
+  "id": "watercolor",
+  "group": "欧美",
+  "zh": "水彩绘本",
+  "en": "Watercolour Storybook",
+  "tagline": "手绘水彩的童话纹理",
+  "desc": "水彩纸纹、装饰性构图与平面化空间；颜色会溢出线条，形状带民间艺术的几何感。",
+  "era": "2000s—now",
+  "mood": [
+   "童话",
+   "神秘",
+   "手作",
+   "诗意"
+  ],
+  "genre": [
+   "神话",
+   "奇幻",
+   "成长",
+   "冒险"
+  ],
+  "tech": [
+   "水彩",
+   "手绘纹理",
+   "装饰性构图"
+  ],
+  "kw": [
+   "凯尔经的秘密",
+   "海洋之歌",
+   "狼行者",
+   "水彩",
+   "绘本",
+   "爱尔兰",
+   "手绘",
+   "cartoon saloon",
+   "watercolour",
+   "storybook",
+   "children",
+   "fairy tale",
+   "forest"
+  ],
+  "palette": [
+   "#2a6f97",
+   "#61a5c2",
+   "#a9d6e5",
+   "#f4a261",
+   "#e9edc9"
+  ],
+  "recipe": {
+   "line": "手绘细线，会被色块覆盖",
+   "shade": "水彩叠色，无硬边",
+   "light": "柔和平光，装饰性光斑",
+   "lens": "平面化构图，圆形与对称",
+   "fx": "纸纹、颜料晕开、剪影转场"
+  },
+  "works": [
+   {
+    "t": "凯尔经的秘密",
+    "y": 2009,
+    "s": "Cartoon Saloon"
+   },
+   {
+    "t": "海洋之歌",
+    "y": 2014,
+    "s": "Cartoon Saloon"
+   },
+   {
+    "t": "狼行者",
+    "y": 2020,
+    "s": "Cartoon Saloon"
+   }
+  ],
+  "ft": {
+   "q": "a child walking through an enchanted forest, decorative shapes, watercolour texture",
+   "style": "watercolour, painterly, flat minimal, pastel, hand-drawn cel"
+  },
+  "prompt": "animated film still, watercolour on paper texture, decorative flat shapes, celtic ornament, muted natural palette, 2D",
+  "kin": [
+   "ghibli",
+   "ink",
+   "pastel"
+  ]
+ },
+ {
+  "id": "ink",
+  "group": "中国",
+  "zh": "国风水墨",
+  "en": "Chinese Ink-wash",
+  "tagline": "留白也是角色",
+  "desc": "水墨晕染、毛笔线条与大量留白；运动用墨的扩散表现，声画都靠气息与节奏。",
+  "era": "1960s—now",
+  "mood": [
+   "诗意",
+   "留白",
+   "东方",
+   "孤寂"
+  ],
+  "genre": [
+   "武侠",
+   "神话",
+   "历史",
+   "文艺"
+  ],
+  "tech": [
+   "水墨",
+   "留白",
+   "毛笔线条"
+  ],
+  "kw": [
+   "水墨",
+   "国风",
+   "山水",
+   "武侠",
+   "小蝌蚪找妈妈",
+   "山水情",
+   "中国动画",
+   "留白",
+   "ink",
+   "chinese",
+   "brush"
+  ],
+  "palette": [
+   "#f4f1ea",
+   "#d9d2c5",
+   "#8c8272",
+   "#2b2b2b",
+   "#a33b20"
+  ],
+  "recipe": {
+   "line": "毛笔中锋，飞白与断笔",
+   "shade": "墨分五色，晕染过渡",
+   "light": "无明确光源，靠墨色层次",
+   "lens": "长卷式横移，留白构图",
+   "fx": "墨滴扩散、纸纹、印章"
+  },
+  "works": [
+   {
+    "t": "山水情",
+    "y": 1988,
+    "s": "上海美术电影制片厂"
+   },
+   {
+    "t": "小蝌蚪找妈妈",
+    "y": 1960,
+    "s": "上海美影"
+   },
+   {
+    "t": "雾山五行",
+    "y": 2020,
+    "s": "六道无鱼"
+   }
+  ],
+  "ft": {
+   "q": "a swordsman standing alone in a misty mountain landscape, vast empty space",
+   "style": "painterly, muted, monochrome, flat minimal, hand-drawn cel"
+  },
+  "prompt": "Chinese ink-wash animation still, brush strokes, vast negative space, misty mountains, paper texture, 2D",
+  "kin": [
+   "watercolor",
+   "mono",
+   "guoman"
+  ]
+ },
+ {
+  "id": "laika",
+  "group": "欧美",
+  "zh": "定格偶动画",
+  "en": "Stop-motion Puppetry",
+  "tagline": "每一根毛发都被手碰过",
+  "desc": "实体偶、微缩布景与逐帧拍摄；材质真实，光在模型上有重量，动作略带顿感。",
+  "era": "2000s—now",
+  "mood": [
+   "怪诞",
+   "手作",
+   "阴森",
+   "温暖"
+  ],
+  "genre": [
+   "恐怖",
+   "奇幻",
+   "家庭",
+   "冒险"
+  ],
+  "tech": [
+   "定格",
+   "偶动画",
+   "微缩布景"
+  ],
+  "kw": [
+   "莱卡",
+   "鬼妈妈",
+   "魔弦传说",
+   "通灵男孩诺曼",
+   "定格",
+   "黏土",
+   "stop motion",
+   "puppet"
+  ],
+  "palette": [
+   "#2f2b2a",
+   "#6b5b4b",
+   "#c2a878",
+   "#8fa68e",
+   "#e8dcc4"
+  ],
+  "recipe": {
+   "line": "无描线，靠材质与光影",
+   "shade": "真实软阴影，景深明显",
+   "light": "布景实用光，冷暖对比",
+   "lens": "微距感、浅景深",
+   "fx": "偶的接缝、灰尘、布景纹理"
+  },
+  "works": [
+   {
+    "t": "鬼妈妈",
+    "y": 2009,
+    "s": "Laika"
+   },
+   {
+    "t": "通灵男孩诺曼",
+    "y": 2012,
+    "s": "Laika"
+   },
+   {
+    "t": "魔弦传说",
+    "y": 2016,
+    "s": "Laika"
+   }
+  ],
+  "ft": {
+   "q": "a small figure standing in a miniature dim workshop, practical lighting",
+   "style": "stop motion, dark, warm, detailed backgrounds"
+  },
+  "prompt": "stop-motion still, handcrafted puppet, miniature set, practical lighting, shallow depth of field, tactile textures",
+  "kin": [
+   "pixar",
+   "spiderverse",
+   "watercolor"
+  ]
+ },
+ {
+  "id": "pixar",
+  "group": "欧美",
+  "zh": "3D 卡通",
+  "en": "Studio 3D Cartoon",
+  "tagline": "圆润、明亮、可信",
+  "desc": "次表面散射的皮肤、圆润造型与可控的摄影机；光照设计服务于情绪，几乎不留死角。",
+  "era": "1990s—now",
+  "mood": [
+   "明亮",
+   "讨喜",
+   "冒险",
+   "温暖"
+  ],
+  "genre": [
+   "家庭",
+   "冒险",
+   "喜剧",
+   "成长"
+  ],
+  "tech": [
+   "3D",
+   "次表面散射",
+   "圆润造型"
+  ],
+  "kw": [
+   "皮克斯",
+   "3D",
+   "三维",
+   "合家欢",
+   "玩具总动员",
+   "寻梦环游记",
+   "卡通",
+   "pixar",
+   "3d",
+   "cartoon",
+   "family"
+  ],
+  "palette": [
+   "#ffb703",
+   "#fb8500",
+   "#219ebc",
+   "#8ecae6",
+   "#f1faee"
+  ],
+  "recipe": {
+   "line": "无描线，边缘光塑形",
+   "shade": "全局光照 + 柔和阴影",
+   "light": "三点光、暖冷对比",
+   "lens": "35–50mm，稳重运镜",
+   "fx": "景深、体积光、粒子"
+  },
+  "works": [
+   {
+    "t": "玩具总动员",
+    "y": 1995,
+    "s": "Pixar"
+   },
+   {
+    "t": "寻梦环游记",
+    "y": 2017,
+    "s": "Pixar"
+   },
+   {
+    "t": "心灵奇旅",
+    "y": 2020,
+    "s": "Pixar"
+   }
+  ],
+  "ft": {
+   "q": "a character in a bright colourful room, soft global illumination",
+   "style": "3D CGI, vivid, warm, soft natural light"
+  },
+  "prompt": "3D animated film still, rounded character design, soft global illumination, subsurface skin, vibrant palette, cinematic depth of field",
+  "kin": [
+   "spiderverse",
+   "klaus",
+   "laika"
+  ]
+ },
+ {
+  "id": "spiderverse",
+  "group": "欧美",
+  "zh": "漫画混合 3D",
+  "en": "Comic-mixed 3D",
+  "tagline": "把漫画印刷搬进三维",
+  "desc": "2D 线条、网点与手绘质感叠在 3D 上，抽帧让动作有顿感，色彩故意错位。",
+  "era": "2010s—now",
+  "mood": [
+   "炸裂",
+   "街头",
+   "青春",
+   "炫"
+  ],
+  "genre": [
+   "超级英雄",
+   "动作",
+   "科幻",
+   "成长"
+  ],
+  "tech": [
+   "2D/3D 混合",
+   "网点",
+   "抽帧"
+  ],
+  "kw": [
+   "蜘蛛侠",
+   "平行宇宙",
+   "漫画感",
+   "网点",
+   "抽帧",
+   "街头",
+   "spider-verse",
+   "comic"
+  ],
+  "palette": [
+   "#ff006e",
+   "#00f5d4",
+   "#ffbe0b",
+   "#3a86ff",
+   "#f72585"
+  ],
+  "recipe": {
+   "line": "手绘墨线叠在 3D 上，故意不对齐",
+   "shade": "网点 + 硬色块阴影",
+   "light": "霓虹、色差、边缘光",
+   "lens": "大广角、剧烈运镜",
+   "fx": "抽帧、色差、印刷错位、涂鸦"
+  },
+  "works": [
+   {
+    "t": "蜘蛛侠：平行宇宙",
+    "y": 2018,
+    "s": "Sony Pictures Animation"
+   },
+   {
+    "t": "蜘蛛侠：纵横宇宙",
+    "y": 2023,
+    "s": "Sony Pictures Animation"
+   },
+   {
+    "t": "穿靴子的猫 2",
+    "y": 2022,
+    "s": "DreamWorks"
+   }
+  ],
+  "ft": {
+   "q": "a figure leaping between rooftops at night, comic-style impact lines",
+   "style": "mixed 2D/3D, vivid, high-contrast shadows, neon"
+  },
+  "prompt": "animated film still, comic-book halftone, hand-drawn ink over 3D, misregistered color, step-printed motion, neon city",
+  "kin": [
+   "trigger",
+   "pixar",
+   "neon"
+  ]
+ },
+ {
+  "id": "klaus",
+  "group": "欧美",
+  "zh": "手绘光照 2D",
+  "en": "Painted Light 2D",
+  "tagline": "二维也能有体积光",
+  "desc": "用 2D 绘制模拟三维光照：渐变体积光、手绘高光与绒毛边缘，传统手绘的现代复活。",
+  "era": "2010s—now",
+  "mood": [
+   "温暖",
+   "古典",
+   "节日",
+   "手作"
+  ],
+  "genre": [
+   "家庭",
+   "冒险",
+   "节日",
+   "喜剧"
+  ],
+  "tech": [
+   "2D",
+   "体积光",
+   "手绘"
+  ],
+  "kw": [
+   "克劳斯",
+   "圣诞",
+   "手绘",
+   "体积光",
+   "2D",
+   "klaus",
+   "christmas",
+   "snow"
+  ],
+  "palette": [
+   "#1d3557",
+   "#457b9d",
+   "#a8dadc",
+   "#f1faee",
+   "#e63946"
+  ],
+  "recipe": {
+   "line": "细线，边缘被光晕柔化",
+   "shade": "手绘渐变阴影 + 高光",
+   "light": "体积光、烛光、雪地反光",
+   "lens": "广角全景 + 特写",
+   "fx": "光柱、雪、手绘纹理"
+  },
+  "works": [
+   {
+    "t": "克劳斯：圣诞节的秘密",
+    "y": 2019,
+    "s": "The SPA Studios"
+   },
+   {
+    "t": "生命之书",
+    "y": 2014,
+    "s": "Reel FX"
+   },
+   {
+    "t": "漫漫北寻路",
+    "y": 2015,
+    "s": "Sacrebleu"
+   }
+  ],
+  "ft": {
+   "q": "a wooden village at dusk with warm lamp light and snow",
+   "style": "hand-drawn cel, warm, soft natural light, detailed backgrounds"
+  },
+  "prompt": "2D animated film still, hand-painted volumetric light, snowy village, warm lamplight, subtle gradients, painterly",
+  "kin": [
+   "ghibli",
+   "pixar",
+   "watercolor"
+  ]
+ },
+ {
+  "id": "flat",
+  "group": "风格 · 题材",
+  "zh": "极简扁平",
+  "en": "Flat Minimal",
+  "tagline": "少即是多",
+  "desc": "平涂色块、几何形状、有限动画；信息密度低，节奏靠剪辑与声音。",
+  "era": "2010s—now",
+  "mood": [
+   "干净",
+   "冷静",
+   "设计感",
+   "幽默"
+  ],
+  "genre": [
+   "喜剧",
+   "广告",
+   "日常",
+   "科普"
+  ],
+  "tech": [
+   "平涂",
+   "几何",
+   "有限动画"
+  ],
+  "kw": [
+   "扁平",
+   "极简",
+   "几何",
+   "设计",
+   "简约",
+   "无阴影",
+   "flat",
+   "minimal",
+   "vector"
+  ],
+  "palette": [
+   "#ff6b6b",
+   "#4ecdc4",
+   "#ffe66d",
+   "#1a535c",
+   "#f7fff7"
+  ],
+  "recipe": {
+   "line": "无描线或等宽细线",
+   "shade": "完全平涂，无阴影",
+   "light": "无光源，靠色块对比",
+   "lens": "正面平视，固定机位",
+   "fx": "形变、循环动画、图形转场"
+  },
+  "works": [
+   {
+    "t": "小猪佩奇",
+    "y": 2004,
+    "s": "Astley Baker Davies"
+   },
+   {
+    "t": "探险活宝",
+    "y": 2010,
+    "s": "Cartoon Network"
+   },
+   {
+    "t": "Maisy",
+    "y": 1999,
+    "s": "King Rollo Films"
+   }
+  ],
+  "ft": {
+   "q": "two simple characters standing in a flat coloured landscape",
+   "style": "flat minimal, vivid, clean lines, western cartoon"
+  },
+  "prompt": "flat vector animation still, solid colour shapes, no shading, bold simple composition, 2D",
+  "kin": [
+   "ligne",
+   "pastel",
+   "chibi"
+  ]
+ },
+ {
+  "id": "ligne",
+  "group": "欧美",
+  "zh": "法国清线",
+  "en": "Ligne Claire",
+  "tagline": "干净的线，古怪的人",
+  "desc": "等宽清线、平涂上色、几乎无阴影；角色造型夸张但结构严谨，欧洲式幽默。",
+  "era": "1990s—now",
+  "mood": [
+   "幽默",
+   "复古",
+   "欧洲",
+   "荒诞"
+  ],
+  "genre": [
+   "喜剧",
+   "冒险",
+   "犯罪",
+   "剧情"
+  ],
+  "tech": [
+   "清线",
+   "平涂",
+   "无阴影"
+  ],
+  "kw": [
+   "法国动画",
+   "清线",
+   "疯狂约会美丽都",
+   "大坏狐狸",
+   "欧洲",
+   "ligne claire",
+   "french",
+   "european"
+  ],
+  "palette": [
+   "#e9c46a",
+   "#f4a261",
+   "#2a9d8f",
+   "#264653",
+   "#e76f51"
+  ],
+  "recipe": {
+   "line": "等宽墨线，闭合干净",
+   "shade": "极少阴影，靠线密度",
+   "light": "均匀平光",
+   "lens": "广角、全景、横向构图",
+   "fx": "夸张形体、哑剧式表演"
+  },
+  "works": [
+   {
+    "t": "疯狂约会美丽都",
+    "y": 2003,
+    "s": "Les Armateurs"
+   },
+   {
+    "t": "大坏狐狸的故事",
+    "y": 2017,
+    "s": "Folivari"
+   },
+   {
+    "t": "凯尔经的秘密",
+    "y": 2009,
+    "s": "Cartoon Saloon"
+   }
+  ],
+  "ft": {
+   "q": "an eccentric character cycling through a french town, wide shot",
+   "style": "western cartoon, flat minimal, clean lines, muted"
+  },
+  "prompt": "European 2D animation still, clear uniform line, flat colour, eccentric character design, wide composition",
+  "kin": [
+   "flat",
+   "watercolor",
+   "chibi"
+  ]
+ },
+ {
+  "id": "shoujo",
+  "group": "风格 · 题材",
+  "zh": "少女漫",
+  "en": "Shoujo",
+  "tagline": "心动有形状",
+  "desc": "花卉与星星铺满画面，瞳孔里放高光；情绪用背景图案与色调直接外化。",
+  "era": "1970s—now",
+  "mood": [
+   "心动",
+   "梦幻",
+   "浪漫",
+   "纤细"
+  ],
+  "genre": [
+   "恋爱",
+   "校园",
+   "奇幻",
+   "剧情"
+  ],
+  "tech": [
+   "花卉背景",
+   "星星眼",
+   "柔光"
+  ],
+  "kw": [
+   "少女漫",
+   "美少女战士",
+   "樱兰",
+   "水果篮子",
+   "恋爱",
+   "花朵",
+   "闪光",
+   "shoujo",
+   "romance",
+   "sparkle"
+  ],
+  "palette": [
+   "#ffc8dd",
+   "#ffafcc",
+   "#bde0fe",
+   "#cdb4db",
+   "#fff1e6"
+  ],
+  "recipe": {
+   "line": "纤细线条，睫毛与发丝细致",
+   "shade": "柔和渐变 + 闪光点",
+   "light": "过曝高光、柔光",
+   "lens": "特写眼睛、慢动作",
+   "fx": "花瓣、星星、闪光、背景花纹"
+  },
+  "works": [
+   {
+    "t": "美少女战士",
+    "y": 1992,
+    "s": "东映"
+   },
+   {
+    "t": "樱兰高校男公关部",
+    "y": 2006,
+    "s": "Bones"
+   },
+   {
+    "t": "水果篮子",
+    "y": 2001,
+    "s": "Studio Deen"
+   }
+  ],
+  "ft": {
+   "q": "a girl turning with hair floating, sparkles and flower petals",
+   "style": "digital 2D, pastel, glow and bloom, moe big-eyed"
+  },
+  "prompt": "shoujo anime still, sparkles and flower petals, soft pastel gradient, glowing eyes, delicate linework, 2D",
+  "kin": [
+   "yamada",
+   "moe",
+   "kyoani"
+  ]
+ },
+ {
+  "id": "shonen",
+  "group": "风格 · 题材",
+  "zh": "少年热血",
+  "en": "Shonen Battle",
+  "tagline": "速度线是情绪的测量仪",
+  "desc": "大特写、速度线、冲击帧与爆发式作画；友情与胜负用构图和分镜直接喊出来。",
+  "era": "1980s—now",
+  "mood": [
+   "热血",
+   "友情",
+   "战斗",
+   "成长"
+  ],
+  "genre": [
+   "战斗",
+   "冒险",
+   "体育",
+   "奇幻"
+  ],
+  "tech": [
+   "速度线",
+   "冲击帧",
+   "大特写"
+  ],
+  "kw": [
+   "少年漫",
+   "热血",
+   "战斗",
+   "火影",
+   "海贼王",
+   "龙珠",
+   "鬼灭",
+   "排球少年",
+   "shonen",
+   "battle",
+   "action"
+  ],
+  "palette": [
+   "#e63946",
+   "#f1faee",
+   "#ffb703",
+   "#1d3557",
+   "#457b9d"
+  ],
+  "recipe": {
+   "line": "粗细变化极大，速度感强",
+   "shade": "硬边两段阴影",
+   "light": "高对比、逆光剪影",
+   "lens": "仰拍、极近特写、放射构图",
+   "fx": "速度线、冲击帧、白闪"
+  },
+  "works": [
+   {
+    "t": "龙珠",
+    "y": 1986,
+    "s": "东映"
+   },
+   {
+    "t": "海贼王",
+    "y": 1999,
+    "s": "东映"
+   },
+   {
+    "t": "排球少年",
+    "y": 2014,
+    "s": "Production I.G"
+   }
+  ],
+  "ft": {
+   "q": "a fighter launching a powerful attack, radial speed lines, low angle",
+   "style": "hand-drawn cel, vivid, thick outlines, high-contrast shadows"
+  },
+  "prompt": "shonen anime action still, radial speed lines, impact frame, extreme close-up, bold outlines, 2D",
+  "kin": [
+   "trigger",
+   "madhouse",
+   "mappa"
+  ]
+ },
+ {
+  "id": "moe",
+  "group": "风格 · 题材",
+  "zh": "萌系",
+  "en": "Moe",
+  "tagline": "可爱的几何学",
+  "desc": "大头、大眼、圆脸与高频高光；动作小而多，情绪外显，节奏轻快。",
+  "era": "2000s—now",
+  "mood": [
+   "可爱",
+   "轻松",
+   "治愈",
+   "日常"
+  ],
+  "genre": [
+   "日常",
+   "喜剧",
+   "校园",
+   "音乐"
+  ],
+  "tech": [
+   "大眼",
+   "圆脸",
+   "高光"
+  ],
+  "kw": [
+   "萌",
+   "可爱",
+   "大眼",
+   "Q版",
+   "日常",
+   "轻百合",
+   "治愈",
+   "moe",
+   "cute"
+  ],
+  "palette": [
+   "#ffd6e0",
+   "#ffb3c6",
+   "#bde0fe",
+   "#a2d2ff",
+   "#fff0f3"
+  ],
+  "recipe": {
+   "line": "细软线条，圆润转折",
+   "shade": "简单两段阴影 + 大眼高光",
+   "light": "柔和均匀，偏暖",
+   "lens": "平视近景，贴近角色",
+   "fx": "表情符号、花朵、星星"
+  },
+  "works": [
+   {
+    "t": "轻音少女",
+    "y": 2009,
+    "s": "京都动画"
+   },
+   {
+    "t": "请问您今天要来点兔子吗？",
+    "y": 2014,
+    "s": "White Fox"
+   },
+   {
+    "t": "悠哉日常大王",
+    "y": 2013,
+    "s": "Silver Link"
+   }
+  ],
+  "ft": {
+   "q": "a cute girl with big eyes smiling in a bright room",
+   "style": "digital 2D, pastel, moe big-eyed, soft natural light, clean lines"
+  },
+  "prompt": "moe anime still, big sparkling eyes, soft rounded design, pastel palette, gentle light, 2D",
+  "kin": [
+   "kyoani",
+   "shoujo",
+   "chibi"
+  ]
+ },
+ {
+  "id": "chibi",
+  "group": "风格 · 题材",
+  "zh": "Q 版喜剧",
+  "en": "Chibi Comedy",
+  "tagline": "三头身，笑点加倍",
+  "desc": "三头身、夸张表情与形变；用于喜剧段落或整部短篇，节奏快、信息短。",
+  "era": "1990s—now",
+  "mood": [
+   "搞笑",
+   "可爱",
+   "轻松"
+  ],
+  "genre": [
+   "喜剧",
+   "日常",
+   "短篇"
+  ],
+  "tech": [
+   "三头身",
+   "变形",
+   "夸张表情"
+  ],
+  "kw": [
+   "Q版",
+   "三头身",
+   "搞笑",
+   "表情包",
+   "短动画",
+   "泡面番",
+   "chibi",
+   "comedy"
+  ],
+  "palette": [
+   "#ffbe0b",
+   "#fb5607",
+   "#ff006e",
+   "#8338ec",
+   "#3a86ff"
+  ],
+  "recipe": {
+   "line": "粗圆线，闭合",
+   "shade": "平涂 + 一档阴影",
+   "light": "均匀亮光",
+   "lens": "全景、固定机位",
+   "fx": "形变、夸张符号、弹跳"
+  },
+  "works": [
+   {
+    "t": "Q太郎",
+    "y": 1985,
+    "s": "新锐动画"
+   },
+   {
+    "t": "蜡笔小新",
+    "y": 1992,
+    "s": "SHIN-EI"
+   },
+   {
+    "t": "Pop Team Epic",
+    "y": 2018,
+    "s": "神风动画"
+   }
+  ],
+  "ft": {
+   "q": "a tiny chibi character with an exaggerated surprised expression",
+   "style": "chibi, western cartoon, vivid, thick outlines, flat minimal"
+  },
+  "prompt": "chibi anime still, three-head-tall proportions, exaggerated expression, bold outlines, bright flat colours",
+  "kin": [
+   "moe",
+   "flat",
+   "shonen"
+  ]
+ },
+ {
+  "id": "pixel",
+  "group": "风格 · 题材",
+  "zh": "像素动画",
+  "en": "Pixel Animation",
+  "tagline": "用有限的色板讲故事",
+  "desc": "低分辨率像素、有限色板与帧动画；受硬件限制的构图反而更有辨识度。",
+  "era": "1980s—now",
+  "mood": [
+   "游戏",
+   "怀旧",
+   "冒险"
+  ],
+  "genre": [
+   "冒险",
+   "科幻",
+   "奇幻",
+   "游戏"
+  ],
+  "tech": [
+   "像素",
+   "有限色板",
+   "帧动画"
+  ],
+  "kw": [
+   "像素",
+   "8bit",
+   "16bit",
+   "游戏",
+   "复古",
+   "点阵",
+   "pixel",
+   "game"
+  ],
+  "palette": [
+   "#1a1c2c",
+   "#5d275d",
+   "#b13e53",
+   "#ef7d57",
+   "#ffcd75"
+  ],
+  "recipe": {
+   "line": "1px 硬边，无抗锯齿",
+   "shade": "抖动（dithering）",
+   "light": "有限色阶",
+   "lens": "固定侧视或俯视",
+   "fx": "帧动画、扫描线、色板切换"
+  },
+  "works": [
+   {
+    "t": "蔚蓝",
+    "y": 2018,
+    "s": "Extremely OK Games"
+   },
+   {
+    "t": "八方旅人",
+    "y": 2018,
+    "s": "Square Enix"
+   },
+   {
+    "t": "铲子骑士",
+    "y": 2014,
+    "s": "Yacht Club Games"
+   }
+  ],
+  "ft": {
+   "q": "a pixel-art hero standing in a forest clearing, side view",
+   "style": "flat minimal, vivid, 80s look"
+  },
+  "prompt": "pixel art animation frame, limited palette, dithering, 16-bit style, crisp pixels",
+  "kin": [
+   "retro80",
+   "flat",
+   "y2k"
+  ]
+ },
+ {
+  "id": "mono",
+  "group": "风格 · 题材",
+  "zh": "黑白墨线",
+  "en": "Monochrome Ink",
+  "tagline": "没有颜色，只剩结构",
+  "desc": "黑白高对比、网点与排线；阴影承担造型，适合压抑、极简或实验叙事。",
+  "era": "1960s—now",
+  "mood": [
+   "压抑",
+   "诗意",
+   "孤独",
+   "冷"
+  ],
+  "genre": [
+   "剧情",
+   "心理",
+   "恐怖",
+   "实验"
+  ],
+  "tech": [
+   "黑白",
+   "网点",
+   "高对比"
+  ],
+  "kw": [
+   "黑白",
+   "墨线",
+   "单色",
+   "网点",
+   "恐怖",
+   "极简",
+   "高对比",
+   "monochrome",
+   "black and white",
+   "psychological",
+   "dream"
+  ],
+  "palette": [
+   "#0a0a0a",
+   "#2e2e2e",
+   "#5a5a5a",
+   "#a3a3a3",
+   "#f5f5f5"
+  ],
+  "recipe": {
+   "line": "粗细变化大，笔触保留",
+   "shade": "排线 + 网点 + 纯黑",
+   "light": "强侧光剪影",
+   "lens": "固定机位、极简构图",
+   "fx": "颗粒、抖动、负片闪"
+  },
+  "works": [
+   {
+    "t": "悲伤的贝拉多娜",
+    "y": 1973,
+    "s": "虫制作"
+   },
+   {
+    "t": "天使之卵",
+    "y": 1985,
+    "s": "Studio Deen"
+   },
+   {
+    "t": "恶童",
+    "y": 2006,
+    "s": "Studio 4°C"
+   }
+  ],
+  "ft": {
+   "q": "a lone figure in an empty room, strong shadow across the wall",
+   "style": "monochrome, high-contrast shadows, hand-drawn cel, flat minimal"
+  },
+  "prompt": "black and white animation still, high contrast ink, cross-hatching, stark silhouette, 2D",
+  "kin": [
+   "ink",
+   "anno",
+   "gekiga70"
+  ]
+ },
+ {
+  "id": "pastel",
+  "group": "风格 · 题材",
+  "zh": "低饱和粉彩",
+  "en": "Muted Pastel",
+  "tagline": "情绪降半音",
+  "desc": "低饱和、灰调粉彩与柔光；冲突被稀释，适合文艺、日常与轻微忧郁。",
+  "era": "2010s—now",
+  "mood": [
+   "忧郁",
+   "温柔",
+   "疏离",
+   "文艺"
+  ],
+  "genre": [
+   "日常",
+   "青春",
+   "文艺",
+   "剧情"
+  ],
+  "tech": [
+   "低饱和",
+   "粉彩",
+   "柔光"
+  ],
+  "kw": [
+   "低饱和",
+   "粉彩",
+   "莫兰迪",
+   "温柔",
+   "文艺",
+   "小清新",
+   "pastel",
+   "muted"
+  ],
+  "palette": [
+   "#e8dff5",
+   "#c5c9d8",
+   "#a8b5a2",
+   "#f0d9cf",
+   "#8a817c"
+  ],
+  "recipe": {
+   "line": "细线，颜色接近背景",
+   "shade": "极软阴影，几乎无对比",
+   "light": "阴天散射光",
+   "lens": "中景，缓慢运镜",
+   "fx": "柔光、薄雾、轻颗粒"
+  },
+  "works": [
+   {
+    "t": "利兹与青鸟",
+    "y": 2018,
+    "s": "京都动画"
+   },
+   {
+    "t": "花开伊吕波",
+    "y": 2011,
+    "s": "P.A.Works"
+   },
+   {
+    "t": "恋爱小行星",
+    "y": 2020,
+    "s": "动画工房"
+   }
+  ],
+  "ft": {
+   "q": "a quiet room in overcast afternoon light, muted colours",
+   "style": "pastel, muted, soft natural light, digital 2D, clean lines"
+  },
+  "prompt": "anime still, muted pastel palette, soft overcast light, low contrast, gentle atmosphere, 2D",
+  "kin": [
+   "yamada",
+   "kyoani",
+   "mono"
+  ]
+ },
+ {
+  "id": "neon",
+  "group": "风格 · 题材",
+  "zh": "霓虹赛博",
+  "en": "Neon Cyberpunk",
+  "tagline": "湿地面上的彩色倒影",
+  "desc": "霓虹光源、湿地面反射、密集招牌与雾；对比强烈，夜是主角。",
+  "era": "1980s—now",
+  "mood": [
+   "夜",
+   "孤独",
+   "炫",
+   "未来"
+  ],
+  "genre": [
+   "赛博",
+   "科幻",
+   "犯罪",
+   "动作"
+  ],
+  "tech": [
+   "霓虹",
+   "高对比",
+   "反射"
+  ],
+  "kw": [
+   "霓虹",
+   "赛博朋克",
+   "夜景",
+   "雨",
+   "招牌",
+   "未来都市",
+   "霓虹灯",
+   "neon",
+   "cyberpunk",
+   "cyber",
+   "night",
+   "rain",
+   "city"
+  ],
+  "palette": [
+   "#0d0221",
+   "#3a0ca3",
+   "#f72585",
+   "#4cc9f0",
+   "#ffbe0b"
+  ],
+  "recipe": {
+   "line": "细线 + 发光边缘",
+   "shade": "深色底 + 饱和光源",
+   "light": "霓虹、屏幕、反射光",
+   "lens": "广角贴近，浅景深",
+   "fx": "雨、雾、地面反射、光晕"
+  },
+  "works": [
+   {
+    "t": "阿基拉",
+    "y": 1988,
+    "s": "东宝"
+   },
+   {
+    "t": "攻壳机动队",
+    "y": 1995,
+    "s": "Production I.G"
+   },
+   {
+    "t": "赛博朋克：边缘行者",
+    "y": 2022,
+    "s": "Trigger"
+   }
+  ],
+  "ft": {
+   "q": "a narrow street at night, neon signs reflected in wet pavement, rain",
+   "style": "neon, high-contrast shadows, dark, vivid, detailed backgrounds"
+  },
+  "prompt": "anime cyberpunk still, neon reflections on wet street, rain and fog, deep shadows, saturated magenta and cyan, 2D",
+  "kin": [
+   "ig",
+   "oshii",
+   "cel90"
+  ]
+ },
+ {
+  "id": "rotoscope",
+  "group": "风格 · 题材",
+  "zh": "转描",
+  "en": "Rotoscope",
+  "tagline": "从实拍里长出来的动画",
+  "desc": "逐帧描摹实拍影像，动作与重量完全真实；线条抖动本身就是风格。",
+  "era": "2000s—now",
+  "mood": [
+   "真实",
+   "梦幻",
+   "独立",
+   "孤独"
+  ],
+  "genre": [
+   "剧情",
+   "实验",
+   "音乐",
+   "传记"
+  ],
+  "tech": [
+   "转描",
+   "实拍描线",
+   "抖动线条"
+  ],
+  "kw": [
+   "转描",
+   "实拍",
+   "独立动画",
+   "梦境",
+   "rotoscope",
+   "rotoscoping",
+   "live action"
+  ],
+  "palette": [
+   "#2b2b2b",
+   "#6a6a6a",
+   "#c4a484",
+   "#9db4c0",
+   "#e8e8e4"
+  ],
+  "recipe": {
+   "line": "不断抖动的描线，粗细随机",
+   "shade": "随实拍光影走",
+   "light": "自然光、实景光",
+   "lens": "实拍镜头，手持",
+   "fx": "线条抖动、色块漂移、透写感"
+  },
+  "works": [
+   {
+    "t": "黑暗扫描仪",
+    "y": 2006,
+    "s": "Warner"
+   },
+   {
+    "t": "和巴什尔跳华尔兹",
+    "y": 2008,
+    "s": "Bridgit Folman"
+   },
+   {
+    "t": "阿薇尔与虚构世界",
+    "y": 2015,
+    "s": "Je Suis Bien Content"
+   }
+  ],
+  "ft": {
+   "q": "a person walking through a real street, natural light, candid framing",
+   "style": "sketchy lines, muted, film grain, digital 2D"
+  },
+  "prompt": "rotoscoped animation still, wavering hand-drawn outline over live action, muted colours, film grain",
+  "kin": [
+   "mono",
+   "pastel",
+   "ink"
+  ]
+ },
+ {
+  "id": "guoman",
+  "group": "中国",
+  "zh": "国漫 3D 玄幻",
+  "en": "Chinese 3D Fantasy",
+  "tagline": "东方幻想的体量感",
+  "desc": "3D 建模配国风纹样与特效，山水与宫殿尺度夸张；光效华丽，镜头宏大。",
+  "era": "2010s—now",
+  "mood": [
+   "仙侠",
+   "史诗",
+   "东方幻想",
+   "热血"
+  ],
+  "genre": [
+   "玄幻",
+   "修仙",
+   "武侠",
+   "历史"
+  ],
+  "tech": [
+   "3D",
+   "国风建模",
+   "特效"
+  ],
+  "kw": [
+   "国漫",
+   "3D",
+   "玄幻",
+   "修仙",
+   "仙侠",
+   "斗罗大陆",
+   "灵笼",
+   "xianxia",
+   "chinese",
+   "3d",
+   "fantasy"
+  ],
+  "palette": [
+   "#1b263b",
+   "#415a77",
+   "#778da9",
+   "#e0c084",
+   "#c1121f"
+  ],
+  "recipe": {
+   "line": "无描线，靠边缘光分离",
+   "shade": "PBR 材质 + 法线细节",
+   "light": "体积光、法术光源",
+   "lens": "大远景 + 环绕运镜",
+   "fx": "灵气粒子、阵法、云雾"
+  },
+  "works": [
+   {
+    "t": "灵笼",
+    "y": 2019,
+    "s": "艺画开天"
+   },
+   {
+    "t": "雾山五行",
+    "y": 2020,
+    "s": "六道无鱼"
+   },
+   {
+    "t": "凡人修仙传",
+    "y": 2020,
+    "s": "原力动画"
+   }
+  ],
+  "ft": {
+   "q": "a cultivator standing on a mountain peak with floating light particles",
+   "style": "3D CGI, glow and bloom, detailed backgrounds, vivid"
+  },
+  "prompt": "Chinese 3D animation still, xianxia fantasy, volumetric light, ornate costumes, epic scale, cinematic",
+  "kin": [
+   "ink",
+   "ufotable",
+   "spiderverse"
+  ]
+ }
+]
