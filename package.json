@@ -17,7 +17,8 @@
     "README.md",
     "cordis.patch.yml",
     "locale/*.json",
-    "icon.svg"
+    "icon.svg",
+    "presets/moodboards.json"
   ],
   "dsh": {
     "bundle": {

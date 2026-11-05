@@ -49,6 +49,15 @@
 `thumbUrl|thumbnail`、`imageUrl`、`deepLink|url`、`film{title,year}`、
 `metadata.sceneDescription|prompt`、`metadata.colors|colorPalette`、`metadata.*` 镜头标签。
 
+## 预设情绪板（可选）
+
+仓库里可以带一份作者的情绪板：`presets/moodboards.json`。装了插件的人在「情绪板」页会看到一个
+**「安装作者的情绪板 · N」** 按钮，点了才会合并进自己本机，同名的不重复加、id 会重新生成；
+不点就完全不受影响。文件缺失或为空时按钮不出现。
+
+作者这边：设置（右上角齿轮）→「保存为插件预设」，会把当前本机情绪板写进
+`presets/moodboards.json`，随后 `git commit && git push` 即可分享。
+
 ## Token 与费用
 
 面板右上角齿轮 → 设置，粘贴 `ft…` token。密钥只存在浏览器 localStorage，随请求头发给本机路由，
@@ -64,6 +73,7 @@
 | `index.js` | Host 半：代理 FrameThrower（token 不进浏览器）、缓存检索结果、24h 缓存画风词表、用默认模型把需求整理成单帧描述 |
 | `client.js` | 浏览器半：面板 UI、AI 开关、情绪板（localStorage） |
 | `cordis.patch.yml` | 插件行；`config.apiToken` 可放服务端 token（可选，面板里填的优先） |
+| `presets/moodboards.json` | 可选分享的情绪板预设 |
 | `styles.json` | 36 条策展画风目录，**当前不参与匹配**，留作后续「检索预设」素材 |
 | `locale/*.json` | 插件管理页显示的标题与描述 |
 
@@ -75,6 +85,8 @@
 - `POST /anistyle/frames` — `{ query, style?, limit, offset, perTitle }`
 - `POST /anistyle/similar` — `{ frameId | frameIds | image, by?, limit }`
 - `GET /anistyle/last` — 最近一次上游响应的形状（诊断用）
+- `GET /anistyle/presets` — 读取 `presets/moodboards.json`
+- `POST /anistyle/presets` — `{ boards }` 写回同一文件（作者导出用）
 
 ## 维护
 

@@ -155,6 +155,12 @@ window.__ModuleLoader__.load({
         suggestHint: "点 ＋ 加入这个情绪板",
         addToBoard: "加入这个情绪板",
         addBoard: "加入情绪板",
+        presetsInstall: "安装作者的情绪板",
+        presetsAdded: "已安装情绪板",
+        presetsNone: "没有新的情绪板可安装",
+        presetSave: "保存为插件预设",
+        presetNote: "把自己当前的情绪板写进插件目录的 presets/moodboards.json，用来分享给其他人。",
+        presetSaved: "已写入预设文件，情绪板数",
         backToBoards: "全部情绪板",
         items: "张",
         lang: "zh",
@@ -248,6 +254,12 @@ window.__ModuleLoader__.load({
         suggestHint: "Tap ＋ to add it to this board",
         addToBoard: "Add to this board",
         addBoard: "Add to a board",
+        presetsInstall: "Install author's boards",
+        presetsAdded: "Boards installed",
+        presetsNone: "Nothing new to install",
+        presetSave: "Save as plugin preset",
+        presetNote: "Write your own moodboards into presets/moodboards.json so other people can install them.",
+        presetSaved: "Preset file written, boards:",
         backToBoards: "All moodboards",
         items: "frames",
         lang: "en",
@@ -571,12 +583,20 @@ window.__ModuleLoader__.load({
               }, '＋'))))
     }
 
-    function BoardsHome({ boards, onCreate, onOpen, onDelete, onPin }) {
+    function BoardsHome({ boards, onCreate, onOpen, onDelete, onPin, presets, onInstallPresets }) {
       const T = useT()
       return h('section', null,
         h('div', { className: 'ase-section-head' },
           h('h1', { className: 'ase-h1' }, T('boards')),
-          h('button', { type: 'button', className: 'ase-btn ase-btn--primary', onClick: () => onCreate('') }, '＋ ' + T('newBoard'))),
+          h('div', { className: 'ase-section-actions' },
+            presets && presets.length
+              ? h('button', {
+                type: 'button',
+                className: 'ase-btn',
+                onClick: onInstallPresets,
+              }, T('presetsInstall') + ' · ' + presets.length)
+              : null,
+            h('button', { type: 'button', className: 'ase-btn ase-btn--primary', onClick: () => onCreate('') }, '＋ ' + T('newBoard')))),
         boards.length
           ? h('div', { className: 'ase-board-grid' },
             boards.map((board) => h('article', { key: board.id, className: 'ase-board-card' },
@@ -707,7 +727,7 @@ window.__ModuleLoader__.load({
         }))
     }
 
-    function Settings({ drafts, configured, onDraft, onSave, onClear, onClose }) {
+    function Settings({ drafts, configured, onDraft, onSave, onClear, onClose, onSavePreset }) {
       const T = useT()
       return h('div', { className: 'ase-scrim', onClick: onClose },
         h('div', { className: 'ase-modal ase-settings', onClick: (event) => event.stopPropagation(), role: 'dialog', 'aria-modal': true },
@@ -740,7 +760,13 @@ window.__ModuleLoader__.load({
             source.docs
               ? h('a', { className: 'ase-source-docs', href: source.docs, target: '_blank', rel: 'noreferrer' }, T('getToken') + ' ↗')
               : null)),
-          ))
+          onSavePreset
+            ? h('section', { className: 'ase-preset-row' },
+              h('div', null,
+                h('strong', null, T('presetSave')),
+                h('p', { className: 'ase-modal-sub' }, T('presetNote'))),
+              h('button', { type: 'button', className: 'ase-btn', onClick: onSavePreset }, T('presetSave')))
+            : null))
     }
 
     function Lightbox({ frames, index, onClose, onIndex, onAdd, addLabel, isAdded }) {
@@ -1148,6 +1174,7 @@ window.__ModuleLoader__.load({
       })
       const [modalFrame, setModalFrame] = useState(null)
       const [suggests, setSuggests] = useState(null)
+      const [presets, setPresets] = useState([])
       const [suggestBusy, setSuggestBusy] = useState(null)
       const [toast, setToast] = useState('')
       const [settingsOpen, setSettingsOpen] = useState(false)
@@ -1168,6 +1195,15 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         try { window.localStorage.setItem(BOARDS_KEY, JSON.stringify(boards)) } catch {}
       }, [boards])
+
+      useEffect(() => {
+        let alive = true
+        fetch('/anistyle/presets', { headers: { Accept: 'application/json' } })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { if (alive && data && Array.isArray(data.boards)) setPresets(data.boards) })
+          .catch(() => {})
+        return () => { alive = false }
+      }, [])
 
       useEffect(() => {
         try {
@@ -1518,6 +1554,28 @@ window.__ModuleLoader__.load({
         setBoards((list) => list.map((board) => (board.id === boardId ? { ...board, pinned: !board.pinned } : board)))
       }, [])
 
+      const installPresets = useCallback(() => {
+        const names = new Set(boards.map((board) => board.name))
+        const additions = presets
+          .filter((board) => board && Array.isArray(board.items) && !names.has(board.name))
+          .map((board) => ({
+            ...board,
+            id: newId(),
+            pinned: false,
+            createdAt: Number(board.createdAt) || Date.now(),
+            updatedAt: Number(board.updatedAt) || Date.now(),
+          }))
+        if (!additions.length) { setToast(t('presetsNone')); return }
+        setBoards((list) => additions.concat(list))
+        setToast(t('presetsAdded') + ' ' + additions.length)
+      }, [boards, presets, t])
+
+      const savePresets = useCallback(() => {
+        api('/anistyle/presets', { boards })
+          .then((data) => setToast(t('presetSaved') + ' ' + (data?.saved ?? boards.length)))
+          .catch((error) => setToast(String(error.message || error)))
+      }, [boards, t])
+
       const addToBoard = useCallback((boardId, frame, keepOpen) => {
         if (!frame) { setModalFrame(null); return }
         const target = boards.find((board) => board.id === boardId)
@@ -1656,6 +1714,8 @@ window.__ModuleLoader__.load({
                 boards: sortedBoards,
                 onCreate: (name) => setActiveBoard(createBoard(name).id),
                 onPin: togglePin,
+                presets,
+                onInstallPresets: installPresets,
                 onOpen: (id) => setActiveBoard(id),
                 onDelete: deleteBoard,
               }),
@@ -1718,6 +1778,7 @@ window.__ModuleLoader__.load({
               setVocabulary([])
             },
             onClose: () => setSettingsOpen(false),
+            onSavePreset: savePresets,
           })
           : null,
         toast ? h('div', { className: 'ase-toast' }, toast) : null)
@@ -1872,6 +1933,9 @@ window.__ModuleLoader__.load({
 .ase-btn--primary:disabled{opacity:.45;cursor:default}
 .ase-hint{margin:10px 2px 0;font-size:11.5px;line-height:1.6;color:var(--dsw-alias-label-secondary)}
 .ase-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:8px 0 18px}
+.ase-section-actions{display:flex;align-items:center;gap:8px}
+.ase-preset-row{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:var(--dsw-alias-bg-layer-1)}
+.ase-preset-row strong{font-size:12.5px;display:block;margin-bottom:3px}
 .ase-section-head .ase-h1{margin:0}
 .ase-dots{display:inline-flex;border-radius:3px;overflow:hidden}
 .ase-dots i{display:block;width:6px;height:11px}

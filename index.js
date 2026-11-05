@@ -1,9 +1,10 @@
-import { readFile, stat } from 'node:fs/promises'
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const API_BASE = 'https://framethrower.ai/api/v1'
 const LIBRARY_PATH = join(dirname(fileURLToPath(import.meta.url)), 'styles.json')
+const PRESET_PATH = join(dirname(fileURLToPath(import.meta.url)), 'presets', 'moodboards.json')
 const CACHE_TTL_MS = 30 * 60 * 1000
 const VOCAB_TTL_MS = 24 * 60 * 60 * 1000
 const CACHE_MAX = 120
@@ -21,6 +22,17 @@ export function apply(ctx, config) {
   let library = { mtime: -1, data: null }
   let vocabulary = null
   let lastDebug = null
+
+  async function readPresets() {
+    try {
+      const parsed = JSON.parse(await readFile(PRESET_PATH, 'utf8'))
+      if (Array.isArray(parsed)) return parsed
+      if (parsed && Array.isArray(parsed.boards)) return parsed.boards
+      return []
+    } catch {
+      return []
+    }
+  }
 
   async function loadLibrary() {
     try {
@@ -53,6 +65,28 @@ export function apply(ctx, config) {
         styles,
         hasToken: Boolean(resolveToken(req)),
       })
+    }
+
+    if (req.method === 'GET' && path === '/anistyle/presets') {
+      return send(res, 200, { source: 'presets', boards: await readPresets() })
+    }
+
+    if (req.method === 'POST' && path === '/anistyle/presets') {
+      let body
+      try {
+        body = await readJson(req)
+      } catch {
+        return send(res, 400, { error: 'invalid json' })
+      }
+      const boards = Array.isArray(body?.boards) ? body.boards : null
+      if (!boards) return send(res, 400, { error: 'boards must be an array' })
+      try {
+        await mkdir(dirname(PRESET_PATH), { recursive: true })
+        await writeFile(PRESET_PATH, JSON.stringify(boards, null, 2) + '\n', 'utf8')
+        return send(res, 200, { source: 'presets', saved: boards.length })
+      } catch (error) {
+        return send(res, 500, { error: String(error && error.message ? error.message : error) })
+      }
     }
 
     if (req.method === 'GET' && path === '/anistyle/last') {
