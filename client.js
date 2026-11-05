@@ -161,7 +161,7 @@ window.__ModuleLoader__.load({
         presetSave: "保存为插件预设",
         presetNote: "把当前的情绪板写进插件目录，分享给其他人。",
         presetSaved: "已写入预设文件，情绪板数",
-        presetPushed: "已写入并推送到",
+        presetPushed: "已写入并成功推送",
         presetPushFailed: "已写入，但推送失败",
         backToBoards: "全部情绪板",
         items: "张",
@@ -262,7 +262,7 @@ window.__ModuleLoader__.load({
         presetSave: "Save as plugin preset",
         presetNote: "Write the current moodboards into the plugin folder to share them.",
         presetSaved: "Preset file written, boards:",
-        presetPushed: "Written and pushed to",
+        presetPushed: "Saved and pushed",
         presetPushFailed: "Written, push failed",
         backToBoards: "All moodboards",
         items: "frames",
@@ -1578,7 +1578,7 @@ window.__ModuleLoader__.load({
         api('/anistyle/presets', { boards })
           .then((data) => {
             const count = data?.saved ?? boards.length
-            if (data?.pushed) setToast(t('presetPushed') + ' ' + (data.branch || 'main') + ' · ' + count)
+            if (data?.pushed) setToast(t('presetPushed'))
             else if (data?.pushError) setToast(t('presetPushFailed') + ' · ' + data.pushError)
             else setToast(t('presetSaved') + ' ' + count)
           })
