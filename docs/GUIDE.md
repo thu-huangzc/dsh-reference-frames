@@ -56,7 +56,22 @@
 不点就完全不受影响。文件缺失或为空时按钮不出现。
 
 作者这边：设置（右上角齿轮）→「保存为插件预设」，会把当前本机情绪板写进
-`presets/moodboards.json`，随后 `git commit && git push` 即可分享。
+`presets/moodboards.json`；默认还会**顺手提交并推送**到当前分支。
+
+自动推送用的是**本机 git 凭据**（SSH key 或 git credential helper），插件配置里不需要放任何
+token。前提是这个目录是 git 仓库、配了 `origin`、并且命令行能直接 `git push`。想关掉就改
+`cordis.patch.yml`：
+
+```yaml
+config:
+  autoPush: false      # 只写文件，不推送
+  pushRemote: origin
+  pushBranch: main
+```
+
+推送失败（离线、没权限、远端有新提交）不会丢数据：文件已经写好，提示里会带失败原因，
+手动 `git push` 一次即可。用 HTTPS 远端的话，把 PAT 交给 `git credential` 或 `git remote set-url`
+即可，同样不必写进插件配置。
 
 ## Token 与费用
 

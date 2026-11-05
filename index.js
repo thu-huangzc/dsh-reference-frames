@@ -1,10 +1,14 @@
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const API_BASE = 'https://framethrower.ai/api/v1'
 const LIBRARY_PATH = join(dirname(fileURLToPath(import.meta.url)), 'styles.json')
-const PRESET_PATH = join(dirname(fileURLToPath(import.meta.url)), 'presets', 'moodboards.json')
+const PLUGIN_DIR = dirname(fileURLToPath(import.meta.url))
+const PRESET_PATH = join(PLUGIN_DIR, 'presets', 'moodboards.json')
+const run = promisify(execFile)
 const CACHE_TTL_MS = 30 * 60 * 1000
 const VOCAB_TTL_MS = 24 * 60 * 60 * 1000
 const CACHE_MAX = 120
@@ -22,6 +26,27 @@ export function apply(ctx, config) {
   let library = { mtime: -1, data: null }
   let vocabulary = null
   let lastDebug = null
+
+  // the repo is pushed with the machine's own git credentials (ssh key or stored helper),
+  // so no token ever has to live in the plugin config
+  async function pushPresets(cfg) {
+    const branch = typeof cfg?.pushBranch === 'string' && cfg.pushBranch.trim() ? cfg.pushBranch.trim() : 'main'
+    const remote = typeof cfg?.pushRemote === 'string' && cfg.pushRemote.trim() ? cfg.pushRemote.trim() : 'origin'
+    const opts = { cwd: PLUGIN_DIR, timeout: 25_000, maxBuffer: 1 << 20 }
+    try {
+      await run('git', ['add', 'presets/moodboards.json'], opts)
+      try {
+        await run('git', ['commit', '-m', 'Update moodboard presets'], opts)
+      } catch {
+        // nothing to commit is fine: the file may be identical
+      }
+      await run('git', ['push', remote, `HEAD:${branch}`], opts)
+      return { pushed: true, branch }
+    } catch (error) {
+      const detail = String((error && (error.stderr || error.message)) || error).trim().split('\n').slice(-2).join(' ')
+      return { pushed: false, branch, pushError: detail.slice(0, 240) }
+    }
+  }
 
   async function readPresets() {
     try {
@@ -83,10 +108,14 @@ export function apply(ctx, config) {
       try {
         await mkdir(dirname(PRESET_PATH), { recursive: true })
         await writeFile(PRESET_PATH, JSON.stringify(boards, null, 2) + '\n', 'utf8')
-        return send(res, 200, { source: 'presets', saved: boards.length })
       } catch (error) {
         return send(res, 500, { error: String(error && error.message ? error.message : error) })
       }
+      if (config?.autoPush === false) {
+        return send(res, 200, { source: 'presets', saved: boards.length, pushed: false })
+      }
+      const push = await pushPresets(config)
+      return send(res, 200, { source: 'presets', saved: boards.length, ...push })
     }
 
     if (req.method === 'GET' && path === '/anistyle/last') {

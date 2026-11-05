@@ -3,4 +3,7 @@
       name: 'dsh-reference-frames'
       config:
         apiToken: ''
-        framesPerStyle: 6
+        # 「保存为插件预设」后自动 git push（用本机 git 凭据，无需在这里放 token）
+        autoPush: true
+        pushRemote: origin
+        pushBranch: main
