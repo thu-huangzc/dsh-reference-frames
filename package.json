@@ -1,6 +1,6 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "private": true,
   "type": "module",
   "description": "Reference Frames — search real animation frames from a free-form brief (text or image), then collect the ones that land into moodboards.",
@@ -13,7 +13,6 @@
   "files": [
     "index.js",
     "client.js",
-    "styles.json",
     "README.md",
     "cordis.patch.yml",
     "locale/*.json",

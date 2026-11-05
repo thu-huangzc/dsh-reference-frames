@@ -85,7 +85,6 @@ config:
 | `client.js` | 浏览器半：面板 UI、检索源开关、AI 开关、情绪板（localStorage） |
 | `cordis.patch.yml` | 插件行与配置 |
 | `presets/moodboards.json` | 可选的分享情绪板 |
-| `styles.json` | 36 条策展画风，暂不参与匹配 |
 | `locale/*.json` | 插件管理页显示的标题与描述 |
 
 - `POST /anistyle/interpret` — `{ text }` → `{ source: 'model'|'none', params }`
@@ -95,7 +94,7 @@ config:
 - `GET /anistyle/img?u=` — 图片代理（同源、带缓存、拒绝内网地址、限制大小与类型）
 - `POST /anistyle/similar` — `{ frameId | frameIds | image, by?, limit }`
 - `GET /anistyle/presets` / `POST /anistyle/presets` — 读取 / 写入预设文件
-- `GET /anistyle/library`、`GET /anistyle/last` — 旧目录接口与最近一次上游响应（诊断）
+- `GET /anistyle/last` — 最近一次上游响应（诊断）
 
 ## 维护
 

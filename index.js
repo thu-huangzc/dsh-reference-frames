@@ -1,11 +1,10 @@
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const API_BASE = 'https://framethrower.ai/api/v1'
-const LIBRARY_PATH = join(dirname(fileURLToPath(import.meta.url)), 'styles.json')
 const PLUGIN_DIR = dirname(fileURLToPath(import.meta.url))
 const PRESET_PATH = join(PLUGIN_DIR, 'presets', 'moodboards.json')
 const run = promisify(execFile)
@@ -35,7 +34,6 @@ export function apply(ctx, config) {
   const webCache = new Map()
   const imageCache = new Map()
   let imageBytes = 0
-  let library = { mtime: -1, data: null }
   let vocabulary = null
   let lastDebug = null
 
@@ -71,18 +69,6 @@ export function apply(ctx, config) {
     }
   }
 
-  async function loadLibrary() {
-    try {
-      const info = await stat(LIBRARY_PATH)
-      if (library.data && library.mtime === info.mtimeMs) return library.data
-      const parsed = JSON.parse(await readFile(LIBRARY_PATH, 'utf8'))
-      library = { mtime: info.mtimeMs, data: Array.isArray(parsed) ? parsed : [] }
-      return library.data
-    } catch {
-      return library.data || []
-    }
-  }
-
   async function handle(req, res) {
     let url
     try {
@@ -93,16 +79,6 @@ export function apply(ctx, config) {
     const path = url.pathname.replace(/\/+$/, '')
 
     if (req.method === 'OPTIONS') return send(res, 204, null)
-
-    if (req.method === 'GET' && (path === '/anistyle' || path === '/anistyle/library')) {
-      const styles = await loadLibrary()
-      return send(res, 200, {
-        version: 3,
-        groups: [...new Set(styles.map((style) => style.group))],
-        styles,
-        hasToken: Boolean(resolveToken(req)),
-      })
-    }
 
     if (req.method === 'GET' && path === '/anistyle/presets') {
       return send(res, 200, { source: 'presets', boards: await readPresets() })

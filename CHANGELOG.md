@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.1 — 2026-11-05
+
+Housekeeping.
+
+- Remove the unused `styles.json` catalog and its legacy `GET /anistyle/library` route; style keywords keep coming from FrameThrower's `/animation/vocabulary`.
+
 ## v1.3.0 — 2026-11-05
 
 Multiple retrieval sources, and a source the user can switch per search.

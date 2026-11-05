@@ -85,7 +85,6 @@ A frame search costs about 4 credits, a similar-frame search 2 (10 when searchin
 | `client.js` | Browser half: panel UI, source switches, AI switch, moodboards in localStorage |
 | `cordis.patch.yml` | Plugin row and config |
 | `presets/moodboards.json` | Optional shared moodboards |
-| `styles.json` | 36 curated style entries, not used for matching yet |
 | `locale/*.json` | Title and description shown in the plugin manager |
 
 - `POST /anistyle/interpret` — `{ text }` → `{ source: 'model'|'none', params }`
@@ -95,7 +94,7 @@ A frame search costs about 4 credits, a similar-frame search 2 (10 when searchin
 - `GET /anistyle/img?u=` — image proxy (same-origin, cached, private hosts rejected, size/type limited)
 - `POST /anistyle/similar` — `{ frameId | frameIds | image, by?, limit }`
 - `GET /anistyle/presets` / `POST /anistyle/presets` — read / write the preset file
-- `GET /anistyle/library`, `GET /anistyle/last` — legacy catalog and last upstream response (diagnostics)
+- `GET /anistyle/last` — last upstream response (diagnostics)
 
 ## Maintenance
 
