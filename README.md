@@ -1,30 +1,28 @@
-# 【DSH Plugin】Reference Frames
+# Reference Frames · DSH plugin
 
-描述想要的感觉，从真实动画里找出对味的参考帧，把看中的存进情绪板。
+Describe the feeling you want — or just paste an image — and it pulls real animation frames that match, then lets you keep the ones that land in moodboards.
 
-## 安装
+## Install
 
-前提：
-* DeepSeek Harness
-* [FrameThrower](https://framethrower.ai) token
+Requirements: DeepSeek Harness, and a [FrameThrower](https://framethrower.ai) token (`ft_…`, free to create).
 
 ```bash
 git clone git@github.com:thu-huangzc/dsh-reference-frames.git
 ln -s "$PWD/dsh-reference-frames" ~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames
 ```
 
-更新 profile，编辑 `~/.dsh/profiles/<profile>/package.json`：
+Then let the profile know about it — edit `~/.dsh/profiles/<profile>/package.json`:
 
 ```json
 {
-  "dependencies": { "dsh-reference-frames": "link:/绝对路径/dsh-reference-frames" },
+  "dependencies": { "dsh-reference-frames": "link:/absolute/path/to/dsh-reference-frames" },
   "dsh": { "profile": { "bundles": ["…", "dsh-reference-frames"] } }
 }
 ```
 
-重启 Harness，左侧栏出现「参考帧」；首次使用点右上角齿轮填入 token。
+Restart Harness: a **Reference Frames** entry shows up in the sidebar. Paste the `ft_…` token into the gear menu the first time you use it.
 
-> 软链接名、`package.json` 的 `name`、`cordis.patch.yml` 的 `name`、`client.js` 顶部的 `id`
-> 必须一致，四者缺一插件都不会出现。
+> The symlink name, the package `name`, the `name` in `cordis.patch.yml` and the `id` at the top of `client.js`
+> must all match — miss one and the plugin silently never loads.
 
-使用说明、代码结构、路由与维护方式见 **[docs/GUIDE.md](docs/GUIDE.md)**。
+Usage notes, architecture, routes and maintenance live in **[docs/GUIDE.md](docs/GUIDE.md)** (Chinese).
