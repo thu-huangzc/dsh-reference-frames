@@ -163,6 +163,7 @@ window.__ModuleLoader__.load({
         presetSaved: "已写入预设文件，情绪板数",
         presetPushed: "已写入并成功推送",
         presetPushFailed: "已写入，但推送失败",
+        presetSaving: "保存并推送中…",
         backToBoards: "全部情绪板",
         items: "张",
         lang: "zh",
@@ -264,6 +265,7 @@ window.__ModuleLoader__.load({
         presetSaved: "Preset file written, boards:",
         presetPushed: "Saved and pushed",
         presetPushFailed: "Written, push failed",
+        presetSaving: "Saving…",
         backToBoards: "All moodboards",
         items: "frames",
         lang: "en",
@@ -731,7 +733,7 @@ window.__ModuleLoader__.load({
         }))
     }
 
-    function Settings({ drafts, configured, onDraft, onSave, onClear, onClose, onSavePreset }) {
+    function Settings({ drafts, configured, onDraft, onSave, onClear, onClose, onSavePreset, savingPreset }) {
       const T = useT()
       return h('div', { className: 'ase-scrim', onClick: onClose },
         h('div', { className: 'ase-modal ase-settings', onClick: (event) => event.stopPropagation(), role: 'dialog', 'aria-modal': true },
@@ -769,7 +771,12 @@ window.__ModuleLoader__.load({
               h('div', null,
                 h('strong', null, T('presetSave')),
                 h('p', { className: 'ase-modal-sub' }, T('presetNote'))),
-              h('button', { type: 'button', className: 'ase-btn', onClick: onSavePreset }, T('presetSave')))
+              h('button', {
+                type: 'button',
+                className: 'ase-btn',
+                disabled: Boolean(savingPreset),
+                onClick: onSavePreset,
+              }, savingPreset ? T('presetSaving') : T('presetSave')))
             : null))
     }
 
@@ -1179,6 +1186,7 @@ window.__ModuleLoader__.load({
       const [modalFrame, setModalFrame] = useState(null)
       const [suggests, setSuggests] = useState(null)
       const [presets, setPresets] = useState([])
+      const [savingPreset, setSavingPreset] = useState(false)
       const [suggestBusy, setSuggestBusy] = useState(null)
       const [toast, setToast] = useState('')
       const [settingsOpen, setSettingsOpen] = useState(false)
@@ -1575,6 +1583,8 @@ window.__ModuleLoader__.load({
       }, [boards, presets, t])
 
       const savePresets = useCallback(() => {
+        if (savingPreset) return
+        setSavingPreset(true)
         api('/anistyle/presets', { boards })
           .then((data) => {
             const count = data?.saved ?? boards.length
@@ -1583,7 +1593,8 @@ window.__ModuleLoader__.load({
             else setToast(t('presetSaved') + ' ' + count)
           })
           .catch((error) => setToast(String(error.message || error)))
-      }, [boards, t])
+          .finally(() => setSavingPreset(false))
+      }, [boards, savingPreset, t])
 
       const addToBoard = useCallback((boardId, frame, keepOpen) => {
         if (!frame) { setModalFrame(null); return }
@@ -1788,6 +1799,7 @@ window.__ModuleLoader__.load({
             },
             onClose: () => setSettingsOpen(false),
             onSavePreset: savePresets,
+            savingPreset,
           })
           : null,
         toast ? h('div', { className: 'ase-toast' }, toast) : null)
