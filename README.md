@@ -2,11 +2,11 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-Describe the feeling you want — or paste an image — and it returns real animation frames that match, which you can keep in moodboards.
+Describe the feeling you want — or paste an image — and it returns real reference frames that match, which you can keep in moodboards. Two retrieval sources ship in the box: FrameThrower (animation) and web image search, and you pick which ones a search uses.
 
 ## Install
 
-Requirements: DeepSeek Harness and a [FrameThrower](https://framethrower.ai) token (`ft_…`, free to create).
+Requirements: DeepSeek Harness. A [FrameThrower](https://framethrower.ai) token (`ft_…`, free to create) unlocks the animation source; the web-image source needs no token, so the plugin still works without one.
 
 ```bash
 git clone git@github.com:thu-huangzc/dsh-reference-frames.git

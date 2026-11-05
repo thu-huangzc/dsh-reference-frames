@@ -2,11 +2,11 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-说一句你想要的感觉，或者贴一张图，它会找出对味的真实动画参考帧，供你收进情绪板。
+说一句你想要的感觉，或者贴一张图，它会找出对味的真实参考帧，供你收进情绪板。内置两个检索源：FrameThrower（动画帧）和网页图片，检索时自己决定用哪些。
 
 ## 安装
 
-前提：DeepSeek Harness，以及一个 [FrameThrower](https://framethrower.ai) token（`ft_…`，免费注册）。
+前提：DeepSeek Harness。[FrameThrower](https://framethrower.ai) token（`ft_…`，免费注册）用于动画帧源；网页图片源不需要 token，所以没有 token 也能用。
 
 ```bash
 git clone git@github.com:thu-huangzc/dsh-reference-frames.git
