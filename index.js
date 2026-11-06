@@ -138,6 +138,17 @@ export function apply(ctx, config) {
       return send(res, 200, params ? { source: 'model', params } : { source: 'none', reason, detail })
     }
 
+    if (req.method === 'POST' && path === '/anistyle/interpret-image') {
+      let body
+      try {
+        body = await readJson(req)
+      } catch {
+        return send(res, 400, { error: 'invalid json' })
+      }
+      const { ok, web, reason, detail } = await describeImageForWeb(body)
+      return send(res, 200, ok ? { source: 'model', params: { web } } : { source: 'none', reason, detail })
+    }
+
     if (req.method === 'GET' && path === '/anistyle/img') {
       return proxyImage(url, res)
     }
@@ -341,6 +352,131 @@ export function apply(ctx, config) {
         }
       }
       return { params: null, reason: 'call-failed', detail: errors.slice(0, 2).join(' | ') }
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  /**
+   * Turn one attached image into web image-search phrases with the default
+   * vision model. FrameThrower already accepts the image directly; this is the
+   * bridge for the text-only Bing source. The image is admitted through the
+   * host attachment store first, because model messages carry durable image
+   * references rather than inline base64.
+   */
+  async function describeImageForWeb(body) {
+    const parsedImage = parseImageDataUrl(body?.image)
+    if (!parsedImage) return { ok: false, reason: 'bad-image' }
+    const note = text(body?.text, 600)
+    const count = clampInt(body?.count, 1, 3, 3)
+
+    const llm = typeof ctx.get === 'function' ? ctx.get('llm') : undefined
+    const models = typeof ctx.get === 'function' ? ctx.get('agentDefaultModel') : undefined
+    const attachments = typeof ctx.get === 'function' ? ctx.get('attachments') : undefined
+    if (!llm) return { ok: false, reason: 'no-llm' }
+    if (!models) return { ok: false, reason: 'no-model' }
+    if (!attachments || typeof attachments.admitPromptContent !== 'function') {
+      return { ok: false, reason: 'no-attachments' }
+    }
+
+    let selection
+    try {
+      selection = models.currentSelection()
+    } catch {
+      return { ok: false, reason: 'no-model' }
+    }
+    const provider = selection?.provider
+    const model = selection?.model
+    if (!provider || !model) return { ok: false, reason: 'no-model' }
+
+    let modelInfo = null
+    try {
+      if (typeof llm.resolveModelInfo === 'function') modelInfo = await llm.resolveModelInfo(provider, model)
+    } catch {}
+    if (modelInfo && Array.isArray(modelInfo.inputModalities) && !modelInfo.inputModalities.includes('image')) {
+      return { ok: false, reason: 'no-vision' }
+    }
+
+    let admitted
+    try {
+      admitted = await attachments.admitPromptContent([{
+        type: 'image',
+        mediaType: parsedImage.mediaType,
+        data: parsedImage.data,
+      }])
+    } catch (error) {
+      return { ok: false, reason: 'image-rejected', detail: String((error && error.message) || error).slice(0, 160) }
+    }
+    const imagePart = Array.isArray(admitted)
+      ? admitted.find((part) => part && part.type === 'image' && part.attachment)
+      : null
+    if (!imagePart) return { ok: false, reason: 'image-rejected' }
+
+    const example = '[' + Array.from({ length: count }, () => '"string"').join(', ') + ']'
+    const system = [
+      'You help a person find visually similar reference images on the web.',
+      'Look carefully at the attached image and decide what a search engine should look for.',
+      'Reply with one JSON object and nothing else:',
+      '{"web":' + example + '}',
+      'web: ' + count + ' short keyword phrases (2-6 words each) for a web image search engine such as Bing.',
+      'Say what is visible: subject, setting, light, colour, composition and style.',
+      'If the image is a collage, moodboard or screenshot, describe the pictures inside it rather than the app interface or its text.',
+      'Do not name an animation, film or artist unless the image itself proves it.',
+      'The phrases must differ from each other and must be keywords, not sentences.',
+      note
+        ? 'The user added this note; use it as context, but never let it override what the image shows: ' + JSON.stringify(note)
+        : 'There is no additional note.',
+      'Nothing but the JSON.',
+    ].join(' ')
+
+    const message = {
+      role: 'user',
+      content: [
+        { type: 'text', text: note ? 'User note: ' + note : 'Describe this image for an image search.' },
+        imagePart,
+      ],
+    }
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 20_000)
+    const leastReasoning = (controls, info) => {
+      const efforts = info && info.reasoning && Array.isArray(info.reasoning.efforts) ? info.reasoning.efforts : null
+      if (!efforts || !efforts.length) return controls
+      return { ...controls, reasoningEffort: efforts[0].id }
+    }
+    const routes = [
+      () => ({ provider, model, maxTokens: 1200, temperature: 1.0 }),
+      () => ({ provider, model, temperature: 1.0 }),
+    ]
+    const errors = []
+    try {
+      for (const build of routes) {
+        try {
+          const call = await llm.prepareCall(build(), controller.signal, leastReasoning)
+          const options = { ...call.config, messages: [message], system, signal: controller.signal }
+          let out = ''
+          let providerError = ''
+          let aborted = false
+          for await (const chunk of call.stream(options)) {
+            if (!chunk) continue
+            if (chunk.type === 'text-delta') out += chunk.text
+            else if (chunk.type === 'finish') {
+              if (chunk.reason?.kind === 'error') providerError = chunk.reason.failure?.message || 'provider error'
+              else if (chunk.reason?.kind === 'aborted') aborted = true
+            }
+          }
+          if (aborted) return { ok: false, reason: 'timeout' }
+          if (providerError && !out) { errors.push(providerError); continue }
+          const web = parseImageWebQueries(out)
+          if (web) return { ok: true, web }
+          if (!out.trim()) { errors.push(providerError || 'empty response'); continue }
+          return { ok: false, reason: 'unparsed', detail: out.trim().slice(0, 160) }
+        } catch (error) {
+          if (error?.name === 'AbortError') return { ok: false, reason: 'timeout' }
+          const detail = String((error && error.message) || error).slice(0, 160)
+          if (!errors.includes(detail)) errors.push(detail)
+        }
+      }
+      return { ok: false, reason: 'call-failed', detail: errors.slice(0, 2).join(' | ') }
     } finally {
       clearTimeout(timer)
     }
@@ -853,6 +989,40 @@ function clampInt(value, min, max, fallback) {
   const number = Number(value)
   if (!Number.isFinite(number)) return fallback
   return Math.min(max, Math.max(min, Math.trunc(number)))
+}
+
+function parseImageDataUrl(value) {
+  if (typeof value !== 'string') return null
+  const raw = value.trim()
+  if (!raw || raw.length > 2_800_000) return null
+  const match = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/i.exec(raw)
+  if (!match) return null
+  const data = match[2].replace(/\s+/g, '')
+  if (!data || data.length > 2_800_000) return null
+  return { mediaType: match[1].toLowerCase(), data }
+}
+
+function parseImageWebQueries(raw) {
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start < 0 || end <= start) return null
+  let parsed
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1))
+  } catch {
+    return null
+  }
+  const listed = Array.isArray(parsed?.web) ? parsed.web : (typeof parsed?.web === 'string' ? [parsed.web] : [])
+  const web = []
+  for (const item of listed) {
+    let entry = text(item, 120)
+    if (!entry) continue
+    const words = entry.split(/\s+/).filter(Boolean)
+    if (words.length > 8) entry = words.slice(0, 8).join(' ').replace(/[,;:]+$/, '')
+    if (!web.includes(entry)) web.push(entry)
+    if (web.length === 3) break
+  }
+  return web.length ? web : null
 }
 
 async function readJson(req) {

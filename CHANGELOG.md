@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.2 — 2026-11-06
+
+Image input now reaches the web source, and the attached image has a real preview.
+
+- Upstream warnings now name their source, e.g. `FrameThrower · No animation title called “Arcane”.`, so a note from one source is never mistaken for the other's.
+- The pasted / dropped image now actually renders in the composer: the thumbnail was pointing at the attachment object instead of its `preview` data URL. The attachment is a square thumbnail with a circular × that only appears on hover, matching the host chat composer — no caption or "remove" text, no focus ring from clicking it.
+- Clicking the attached thumbnail (cursor: zoom-in) opens the image in a full-screen lightbox; close it with ×, a click outside, or Escape.
+- Right-click (or two-finger click on a trackpad) an enlarged image — in the attachment preview or the frame lightbox — to get a small **Copy image** menu. The image is normalized to a PNG (longest side capped at 2400px) and written through the Clipboard API; a toast confirms success or explains a failure, including unsupported browsers.
+- **Image search now reaches the web source.** With Chrome web images enabled, the default vision model reads the attached image and turns it into Bing search phrases; FrameThrower still gets the raw image for its native visual similarity. Both result sets are interleaved when both sources are on. With AI off, a typed note is used as the web query and an empty note explains why the image cannot be translated. Adds `POST /anistyle/interpret-image`; the image is admitted through the host attachment store so it can be sent as a real image block.
+
 ## v1.3.1 — 2026-11-05
 
 Housekeeping.

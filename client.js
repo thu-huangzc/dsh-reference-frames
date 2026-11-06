@@ -143,6 +143,11 @@ window.__ModuleLoader__.load({
         pickImage: "图片",
         pickImageTip: "选择图片，也可以直接粘贴或拖进来",
         imageAttached: "以这张图检索",
+        viewImage: "放大查看",
+        copyImage: "复制图片",
+        imageCopyUnsupported: "当前浏览器不支持复制图片",
+        imageCopiedToast: "图片已复制到剪贴板",
+        imageCopyFailedToast: "图片复制失败，请重试",
         removeImage: "移除",
         imageFailed: "这张图读不出来，换一张试试",
         noToken: "还没配置 token，检索会失败",
@@ -154,13 +159,23 @@ window.__ModuleLoader__.load({
         noSetup: "无需配置",
         webBadge: "网页",
         failWebNetwork: "连不上网页图片源（网络或服务故障）",
-        failWebEmpty: "网页图片源没有返回图片",
+        failWebEmpty: "没有返回图片",
         failWebPartial: "部分检索词没有返回图片",
         srcOn: "已开启",
         srcOff: "已关闭",
         srcFramethrower: "FrameThrower",
         srcWeb: "网页图片",
-        imageNeedsFrames: "以图检索只走 FrameThrower，先开启它并填好 token",
+        imageNeedsFrames: "以图检索需要网页图片源，或给 FrameThrower 填一个 token",
+        imageSimilar: "相似帧",
+        imageWebNeedsAi: "需要 AI 看图",
+        imageNoVision: "当前默认模型不支持读图，换一个支持图片的模型",
+        imageNoAttachments: "宿主没有挂载图片附件服务",
+        imageBad: "这张图无法读取",
+        imageRejected: "宿主拒绝了这张图片",
+        imageUnparsed: "模型没给出可用的网页检索词",
+        imageTimeout: "模型 20 秒内没回应",
+        imageAiOff: "AI 已关闭，无法从图片生成网页检索词；打开 AI 后再试",
+        imageAiOffText: "AI 已关闭，网页图片按你输入的文字检索",
         boardsEmptyBody: "情绪板是你选中的帧的集合。先去发现页找几张，或者现在就建一个空板。",
         newBoard: "新建情绪板",
         boardName: "情绪板名称",
@@ -262,6 +277,11 @@ window.__ModuleLoader__.load({
         pickImage: "Image",
         pickImageTip: "Pick an image, or just paste / drop one",
         imageAttached: "Searching by this image",
+        viewImage: "View larger",
+        copyImage: "Copy image",
+        imageCopyUnsupported: "This browser cannot copy images",
+        imageCopiedToast: "Image copied to clipboard",
+        imageCopyFailedToast: "Could not copy the image — try again",
         removeImage: "Remove",
         imageFailed: "That image could not be read",
         noToken: "No token yet — search will fail",
@@ -273,13 +293,23 @@ window.__ModuleLoader__.load({
         noSetup: "No setup",
         webBadge: "Web",
         failWebNetwork: "Can't reach the web image source",
-        failWebEmpty: "The web image source returned nothing",
+        failWebEmpty: "returned no images",
         failWebPartial: "some search phrases returned no images",
         srcOn: "On",
         srcOff: "Off",
         srcFramethrower: "FrameThrower",
         srcWeb: "Web images",
-        imageNeedsFrames: "Image search uses FrameThrower — enable it and add a token first",
+        imageNeedsFrames: "Image search needs the web source, or a FrameThrower token",
+        imageSimilar: "Similar frames",
+        imageWebNeedsAi: "needs AI vision",
+        imageNoVision: "The default model can't read images — pick a vision model",
+        imageNoAttachments: "The host has no image attachment service",
+        imageBad: "This image could not be read",
+        imageRejected: "The host rejected this image",
+        imageUnparsed: "The model returned no usable web search phrases",
+        imageTimeout: "The model did not answer within 20s",
+        imageAiOff: "AI is off, so the image cannot become web search phrases — turn AI on and retry",
+        imageAiOffText: "AI is off; web images use your text",
         boardsEmptyBody: "A moodboard is a set of frames you chose. Find a few first, or create an empty one now.",
         newBoard: "New moodboard",
         boardName: "Board name",
@@ -586,6 +616,71 @@ window.__ModuleLoader__.load({
         }
         reader.readAsDataURL(file)
       })
+    }
+
+    const COPY_IMAGE_MAX = 2400
+
+    function imageBlobToPng(blob) {
+      return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined' || typeof window.Image !== 'function') {
+          reject(new Error('unsupported'))
+          return
+        }
+        const url = URL.createObjectURL(blob)
+        const image = new window.Image()
+        let settled = false
+        const finish = (fn, value) => {
+          if (settled) return
+          settled = true
+          URL.revokeObjectURL(url)
+          fn(value)
+        }
+        image.onerror = () => finish(reject, new Error('decode failed'))
+        image.onload = () => {
+          try {
+            const width = image.naturalWidth || image.width
+            const height = image.naturalHeight || image.height
+            if (!width || !height) throw new Error('empty image')
+            const scale = Math.min(1, COPY_IMAGE_MAX / Math.max(width, height))
+            const canvas = document.createElement('canvas')
+            canvas.width = Math.max(1, Math.round(width * scale))
+            canvas.height = Math.max(1, Math.round(height * scale))
+            const context = canvas.getContext('2d')
+            if (!context) throw new Error('canvas unavailable')
+            context.imageSmoothingEnabled = true
+            context.imageSmoothingQuality = 'high'
+            context.drawImage(image, 0, 0, canvas.width, canvas.height)
+            canvas.toBlob((png) => {
+              if (png) finish(resolve, png)
+              else finish(reject, new Error('encode failed'))
+            }, 'image/png')
+          } catch (error) {
+            finish(reject, error)
+          }
+        }
+        image.src = url
+      })
+    }
+
+    async function imagePngBlob(src) {
+      let response
+      try {
+        response = await fetch(src)
+      } catch {
+        throw new Error('fetch failed')
+      }
+      if (!response.ok) throw new Error('fetch failed')
+      const blob = await response.blob()
+      if (!blob || !/^image\//.test(String(blob.type || ''))) throw new Error('not an image')
+      return imageBlobToPng(blob)
+    }
+
+    async function copyPngBlob(blob) {
+      const clipboard = typeof navigator === 'undefined' ? null : navigator.clipboard
+      if (!clipboard || typeof clipboard.write !== 'function' || typeof ClipboardItem === 'undefined') {
+        throw new Error('unsupported')
+      }
+      await clipboard.write([new ClipboardItem({ 'image/png': blob })])
     }
 
     function FrameTile({ frame, onAdd, onSimilar, onRemove, onZoom, busy }) {
@@ -985,18 +1080,152 @@ window.__ModuleLoader__.load({
           })))
     }
 
-    function Lightbox({ frames, index, onClose, onIndex, onAdd, addLabel, isAdded }) {
+    function ClipboardIcon() {
+      return h('svg', { width: 13, height: 13, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('rect', { x: 5.3, y: 5.3, width: 8.2, height: 8.2, rx: 1.5, stroke: 'currentColor', strokeWidth: 1.3 }),
+        h('path', {
+          d: 'M10.7 5.3V4A1.5 1.5 0 0 0 9.2 2.5H4A1.5 1.5 0 0 0 2.5 4v5.2A1.5 1.5 0 0 0 4 10.7h1.3',
+          stroke: 'currentColor', strokeWidth: 1.3, strokeLinecap: 'round',
+        }))
+    }
+
+    const CONTEXT_MENU_W = 164
+    const CONTEXT_MENU_H = 42
+
+    function contextMenuPosition(x, y) {
+      const pad = 8
+      const width = Math.min(CONTEXT_MENU_W, Math.max(0, window.innerWidth - pad * 2))
+      const left = x + width + pad > window.innerWidth ? x - width : x
+      const top = y + CONTEXT_MENU_H + pad > window.innerHeight ? y - CONTEXT_MENU_H : y
+      return {
+        left: Math.max(pad, Math.min(left, window.innerWidth - width - pad)),
+        top: Math.max(pad, Math.min(top, window.innerHeight - CONTEXT_MENU_H - pad)),
+      }
+    }
+
+    function useImageCopier(src, onToast) {
       const T = useT()
-      const frame = frames[index]
+      const blobRef = useRef(null)
+      useEffect(() => {
+        let alive = true
+        blobRef.current = null
+        if (!src) return () => { alive = false }
+        imagePngBlob(src).then((blob) => {
+          if (alive) blobRef.current = blob
+        }).catch(() => {})
+        return () => { alive = false }
+      }, [src])
+      return useCallback(async () => {
+        try {
+          const blob = blobRef.current || await imagePngBlob(src)
+          blobRef.current = blob
+          await copyPngBlob(blob)
+          if (onToast) onToast(T('imageCopiedToast'))
+        } catch (error) {
+          if (onToast) onToast(T(error && error.message === 'unsupported' ? 'imageCopyUnsupported' : 'imageCopyFailedToast'))
+        }
+      }, [src, onToast, T])
+    }
+
+    function ImageContextMenu({ x, y, onCopy, onClose }) {
+      const T = useT()
+      const position = contextMenuPosition(x, y)
+      useEffect(() => {
+        const onResize = () => onClose()
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+      }, [onClose])
+      return h(React.Fragment, null,
+        h('div', {
+          className: 'ase-imgmenu-backdrop',
+          onClick: (event) => { event.stopPropagation(); onClose() },
+          onContextMenu: (event) => { event.preventDefault(); event.stopPropagation(); onClose() },
+        }),
+        h('div', {
+          className: 'ase-imgmenu',
+          role: 'menu',
+          'aria-label': T('copyImage'),
+          style: { left: position.left, top: position.top },
+          onClick: (event) => event.stopPropagation(),
+          onContextMenu: (event) => { event.preventDefault(); event.stopPropagation() },
+        },
+          h('button', {
+            type: 'button',
+            className: 'ase-imgmenu-item',
+            role: 'menuitem',
+            onClick: (event) => { event.stopPropagation(); onCopy() },
+          }, h(ClipboardIcon), h('span', null, T('copyImage')))))
+    }
+
+    function AttachmentPreview({ src, alt, onClose, onToast }) {
+      const T = useT()
+      const [menu, setMenu] = useState(null)
+      const copyImage = useImageCopier(src, onToast)
       useEffect(() => {
         const onKey = (event) => {
-          if (event.key === 'Escape') onClose()
-          else if (event.key === 'ArrowRight') onIndex(index + 1)
-          else if (event.key === 'ArrowLeft') onIndex(index - 1)
+          if (event.key !== 'Escape') return
+          if (menu) setMenu(null)
+          else onClose()
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-      }, [index, onClose, onIndex])
+      }, [menu, onClose])
+      if (!src) return null
+      return h('div', {
+        className: 'ase-zoom-view ase-attach-view',
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': alt || T('viewImage'),
+        onClick: () => { if (menu) setMenu(null); else onClose() },
+      },
+        h('button', {
+          type: 'button', className: 'ase-zoom-btn ase-zoom-btn--close ase-tip',
+          'data-tip': T('close'), 'aria-label': T('close'),
+          onClick: (event) => { event.stopPropagation(); onClose() },
+        }, '×'),
+        h('img', {
+          className: 'ase-attach-view-img',
+          src,
+          alt: alt || '',
+          onClick: (event) => event.stopPropagation(),
+          onContextMenu: (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setMenu({ x: event.clientX, y: event.clientY })
+          },
+        }),
+        menu
+          ? h(ImageContextMenu, {
+            x: menu.x,
+            y: menu.y,
+            onCopy: () => { setMenu(null); copyImage() },
+            onClose: () => setMenu(null),
+          })
+          : null)
+    }
+
+    function Lightbox({ frames, index, onClose, onIndex, onAdd, addLabel, isAdded, onToast }) {
+      const T = useT()
+      const frame = frames[index]
+      const [menu, setMenu] = useState(null)
+      const copyImage = useImageCopier(frame && (frame.image || frame.thumb), onToast)
+      useEffect(() => {
+        const onKey = (event) => {
+          if (event.key === 'Escape') {
+            if (menu) setMenu(null)
+            else onClose()
+          } else if (event.key === 'ArrowRight') {
+            setMenu(null)
+            onIndex(index + 1)
+          } else if (event.key === 'ArrowLeft') {
+            setMenu(null)
+            onIndex(index - 1)
+          }
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [index, menu, onClose, onIndex])
+      useEffect(() => { setMenu(null) }, [index])
       const imgRef = useRef(null)
       const [ready, setReady] = useState(false)
       useEffect(() => {
@@ -1043,6 +1272,11 @@ window.__ModuleLoader__.load({
               decoding: 'async',
               fetchPriority: 'high',
               onLoad: () => setReady(true),
+              onContextMenu: (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setMenu({ x: event.clientX, y: event.clientY })
+              },
             })),
           h('figcaption', null,
             h('div', { className: 'ase-zoom-meta' },
@@ -1062,7 +1296,15 @@ window.__ModuleLoader__.load({
                     className: 'ase-zoom-add',
                     onClick: (event) => { event.stopPropagation(); onAdd(frame) },
                   }, '＋ ' + (addLabel || T('addBoard'))))
-                : null))))
+                : null))),
+        menu
+          ? h(ImageContextMenu, {
+            x: menu.x,
+            y: menu.y,
+            onCopy: () => { setMenu(null); copyImage() },
+            onClose: () => setMenu(null),
+          })
+          : null)
     }
 
     // -------------------------------------------------------------------- page
@@ -1073,7 +1315,7 @@ window.__ModuleLoader__.load({
       const {
         query, setQuery, results, status, hint, warnings,
         submit, more, similar, hasToken, openToken, canMore, openBoardModal, openZoom, busyId,
-        attachment, onAttachment, onClearAttachment, onImageError, understood, aiNote, failure,
+        attachment, onAttachment, onClearAttachment, onImageError, onToast, understood, aiNote, failure,
         aiOn, onToggleAi, onAiRetry, canLoose, onLooseRetry,
         aiCount, onAiCount,
         loadMore, loadingMore, canLoadMore, noMore,
@@ -1090,6 +1332,7 @@ window.__ModuleLoader__.load({
       const [termEdit, setTermEdit] = useState(null)
       const [dropping, setDropping] = useState(false)
       const [countOpen, setCountOpen] = useState(false)
+      const [attachPreview, setAttachPreview] = useState(false)
       const fileRef = useRef(null)
       const panelRef = useRef(null)
       const triggerRef = useRef(null)
@@ -1348,9 +1591,25 @@ window.__ModuleLoader__.load({
         },
           attachment
             ? h('div', { className: 'ase-attach' },
-              h('img', { src: attachment, alt: '' }),
-              h('span', { className: 'ase-attach-label' }, T('imageAttached')),
-              h('button', { type: 'button', className: 'ase-ghost-link', onClick: onClearAttachment }, T('removeImage')))
+              h('button', {
+                type: 'button',
+                className: 'ase-attach-open',
+                'aria-label': T('viewImage'),
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: () => setAttachPreview(true),
+              }, h('img', {
+                src: attachment.preview || attachment.dataUrl,
+                alt: '',
+                'aria-label': T('imageAttached'),
+              })),
+              h('button', {
+                type: 'button',
+                className: 'ase-attach-x',
+                'aria-label': T('removeImage'),
+                onMouseDown: (event) => event.preventDefault(),
+                onClick: onClearAttachment,
+              }, h('svg', { width: 10, height: 10, viewBox: '0 0 10 10', fill: 'none', 'aria-hidden': true },
+                h('path', { d: 'M1.6 1.6 8.4 8.4M8.4 1.6 1.6 8.4', stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }))))
             : null,
           h('textarea', {
             className: 'ase-textarea',
@@ -1522,7 +1781,15 @@ window.__ModuleLoader__.load({
                 ? h('button', { type: 'button', className: 'ase-btn', onClick: onLooseRetry }, T('retryLoose'))
                 : null)
             : null)),
-        h('div', { className: 'ase-dock' }, compose))
+        h('div', { className: 'ase-dock' }, compose),
+        attachPreview && attachment
+          ? h(AttachmentPreview, {
+            src: attachment.dataUrl || attachment.preview,
+            alt: '',
+            onClose: () => setAttachPreview(false),
+            onToast,
+          })
+          : null)
     }
 
     function Page({ translator, lang, onChooseLang }) {
@@ -1772,7 +2039,7 @@ window.__ModuleLoader__.load({
             }
           }
           if (responses.some((item) => !item || item.source !== 'chrome')) {
-            warnings.push(t('srcWeb') + ' · ' + t('failWebPartial'))
+            warnings.push(t('failWebPartial'))
           }
           return {
             id: 'chrome',
@@ -1796,8 +2063,10 @@ window.__ModuleLoader__.load({
 
           const warningList = []
           for (const outcome of ok) {
+            const label = outcome.id === 'chrome' ? t('srcWeb') : t('srcFramethrower')
             for (const warning of outcome.warnings || []) {
-              if (!warningList.includes(warning)) warningList.push(warning)
+              const line = label + ' · ' + warning
+              if (!warningList.includes(line)) warningList.push(line)
             }
           }
           for (const outcome of failed) {
@@ -1849,12 +2118,16 @@ window.__ModuleLoader__.load({
       const submit = useCallback((override) => {
         const image = (override && override.image) || (attachment && attachment.dataUrl)
         if (image) {
-          // visual search is a FrameThrower feature; the web source has no equivalent
-          if (!enabledSources.includes('framethrower') || !readToken()) {
+          const framesReady = enabledSources.includes('framethrower') && Boolean(readToken())
+          const webReady = enabledSources.includes('chrome')
+          if (!framesReady && !webReady) {
+            const anyOn = enabledSources.includes('framethrower') || enabledSources.includes('chrome')
             setStatus('error')
-            setFailure({ source: 'unconfigured', hint: t('imageNeedsFrames') })
+            setFailure({ source: 'unconfigured', hint: anyOn ? t('imageNeedsFrames') : t('noSources') })
             return
           }
+          const note = String(query || '').trim()
+          lastSearch.current = null
           setStatus('loading')
           setHint('')
           setWarnings([])
@@ -1863,24 +2136,162 @@ window.__ModuleLoader__.load({
           setAiNote(null)
           setFailure(null)
           setLastKind('similar')
-          api('/anistyle/similar', { image, limit: 24 })
-            .then((data) => {
-              if (data.source === 'framethrower') { setResults(data.frames || []); setStatus('ok') }
-              else {
-                setResults([])
-                setFailure({ source: data.source, status: data.status, hint: data.hint })
-                setStatus(data.source === 'unconfigured' ? 'unconfigured' : 'error')
+          setPage(0)
+          setTotal(0)
+          setNoMore(true)
+
+          const runFrames = async () => {
+            const understood = t('srcFramethrower') + ' · ' + t('imageSimilar')
+            let data
+            try {
+              data = await api('/anistyle/similar', { image, limit: 24 })
+            } catch (error) {
+              return {
+                id: 'framethrower',
+                ok: false,
+                failure: { source: 'client', hint: String((error && error.message) || error) },
               }
+            }
+            if (data && data.source === 'framethrower') {
+              return {
+                id: 'framethrower',
+                ok: true,
+                frames: Array.isArray(data.frames) ? data.frames : [],
+                warnings: Array.isArray(data.warnings) ? data.warnings : [],
+                understood,
+              }
+            }
+            return {
+              id: 'framethrower',
+              ok: false,
+              failure: { source: (data && data.source) || 'client', status: data && data.status, hint: (data && data.hint) || '' },
+            }
+          }
+
+          const runWeb = async () => {
+            const aiFailure = (reason, detail) => ({
+              id: 'chrome',
+              ok: false,
+              failure: {
+                source: 'ai',
+                hint: t('imageWebNeedsAi') + ' · ' + imageAiFailureMessage(reason, t, detail),
+              },
             })
-            .catch((error) => {
-              setStatus('error')
-              setFailure({ source: 'client', hint: String(error.message || error) })
-              setResults([])
-            })
+            let webQueries = []
+            let aiOffText = false
+            if (!aiOn) {
+              // turning AI off must stop the vision call; a typed note is still usable as a text query
+              if (!note) return { id: 'chrome', ok: false, failure: { source: 'ai', hint: t('imageAiOff') } }
+              webQueries = [note]
+              aiOffText = true
+            } else {
+              let described
+              try {
+                described = await api('/anistyle/interpret-image', { image, text: note, count: aiCount, lang })
+              } catch (error) {
+                const detail = String((error && error.message) || error)
+                return aiFailure(/^HTTP (400|413|415|422)\b/.test(detail) ? 'bad-image' : 'unreachable', detail)
+              }
+              const wanted = Math.min(3, Math.max(1, Number(aiCount) || 3))
+              webQueries = described && described.source === 'model' && described.params && Array.isArray(described.params.web)
+                ? described.params.web
+                  .filter((item) => typeof item === 'string' && item.trim())
+                  .map((item) => item.trim())
+                  .slice(0, wanted)
+                : []
+              if (!webQueries.length) {
+                return aiFailure(
+                  (described && described.reason) || 'unparsed',
+                  (described && described.detail) || '',
+                )
+              }
+            }
+
+            const perQuery = webQueries.length > 1 ? Math.max(8, Math.ceil(PAGE_SIZE / webQueries.length)) : PAGE_SIZE
+            const responses = await Promise.all(webQueries.map((queryText) => api('/anistyle/web', {
+              query: queryText,
+              limit: perQuery,
+              offset: 0,
+              lang,
+            }).catch((error) => ({ source: 'client', hint: String((error && error.message) || error) }))))
+            const usable = responses.filter((item) => item && item.source === 'chrome')
+
+            if (!usable.length) {
+              const first = responses.find(Boolean) || {}
+              const hint = first.source === 'unreachable'
+                ? t('failWebNetwork')
+                : (first.status === 429 ? t('failTooMany') : (first.hint || t('failWebEmpty')))
+              return { id: 'chrome', ok: false, failure: { source: 'web', hint } }
+            }
+
+            const warnings = []
+            if (aiOffText) warnings.push(t('imageAiOffText'))
+            for (const item of usable) {
+              for (const warning of item.warnings || []) {
+                const line = warning === 'web-empty' ? t('failWebEmpty') : warning
+                if (!warnings.includes(line)) warnings.push(line)
+              }
+            }
+            if (responses.some((item) => !item || item.source !== 'chrome')) {
+              warnings.push(t('failWebPartial'))
+            }
+            return {
+              id: 'chrome',
+              ok: true,
+              frames: mergeGroups(usable.map((item) => item.frames || [])),
+              warnings,
+              understood: t('srcWeb') + ' · ' + webQueries.join(' · '),
+            }
+          }
+
+          const tasks = []
+          if (framesReady) tasks.push(runFrames())
+          if (webReady) tasks.push(runWeb())
+          Promise.all(tasks).then((outcomes) => {
+            const ok = outcomes.filter((outcome) => outcome.ok)
+            const failed = outcomes.filter((outcome) => !outcome.ok)
+            const warningList = []
+            for (const outcome of ok) {
+              const label = outcome.id === 'chrome' ? t('srcWeb') : t('srcFramethrower')
+              for (const warning of outcome.warnings || []) {
+                const line = label + ' · ' + warning
+                if (!warningList.includes(line)) warningList.push(line)
+              }
+            }
+            for (const outcome of failed) {
+              const line = sourceFailureLine(outcome, t)
+              if (line && !warningList.includes(line)) warningList.push(line)
+            }
+            if (enabledSources.includes('framethrower') && !readToken()) {
+              const line = t('srcFramethrower') + ' · ' + t('srcSkipped')
+              if (!warningList.includes(line)) warningList.push(line)
+            }
+
+            if (ok.length) {
+              setResults(mergeGroups(ok.map((outcome) => outcome.frames)))
+              setWarnings(warningList)
+              setUnderstood(ok.map((outcome) => outcome.understood).filter(Boolean).join('\n'))
+              setNoMore(true)
+              setTotal(0)
+              setStatus('ok')
+              return
+            }
+
+            const primary = failed.find((outcome) => outcome.id === 'chrome') || failed[0] || {}
+            setResults([])
+            setWarnings(warningList)
+            setUnderstood('')
+            setFailure(primary.failure || null)
+            setStatus('error')
+          }).catch((error) => {
+            setStatus('error')
+            setFailure({ source: 'client', hint: String((error && error.message) || error) })
+            setResults([])
+          })
           return
         }
         runSearch({ text: (override && override.text) || query })
-      }, [runSearch, query, attachment, enabledSources, t])
+      }, [runSearch, query, attachment, enabledSources, t, aiOn, aiCount, lang])
 
       // Next-page requests for every source that took part in the last search.
       // FrameThrower pages by query batch; the web source pages by result offset.
@@ -2270,6 +2681,7 @@ window.__ModuleLoader__.load({
                 onAttachment: (image) => setAttachment(image),
                 onClearAttachment: () => setAttachment(null),
                 onImageError: () => setToast(t('imageFailed')),
+                onToast: (message) => setToast(message),
                 understood, aiOn, aiNote, failure,
                 aiCount,
                 onAiCount: (next) => {
@@ -2355,6 +2767,7 @@ window.__ModuleLoader__.load({
             frames: zoom.frames,
             index: zoom.index,
             onClose: () => setZoom(null),
+            onToast: (message) => setToast(message),
             addLabel: zoom.boardId ? t('addToBoard') : null,
             isAdded: (frame) => {
               if (!zoom.boardId) return false
@@ -2446,6 +2859,24 @@ window.__ModuleLoader__.load({
       const base = key ? T(key) : T('aiCallFailed')
       const extra = detail ? '（' + String(detail).slice(0, 120) + '）' : ''
       return T('aiOff') + '：' + base + extra + ' · ' + T('aiFellBack')
+    }
+
+    function imageAiFailureMessage(reason, T, detail) {
+      const key = {
+        'no-llm': 'aiNoLlm',
+        'no-model': 'aiNoModel',
+        'no-vision': 'imageNoVision',
+        'no-attachments': 'imageNoAttachments',
+        'bad-image': 'imageBad',
+        'image-rejected': 'imageRejected',
+        unparsed: 'imageUnparsed',
+        timeout: 'imageTimeout',
+        'call-failed': 'aiCallFailed',
+        unreachable: 'aiUnreachable',
+      }[reason]
+      const base = key ? T(key) : T('aiCallFailed')
+      const extra = detail ? '（' + String(detail).slice(0, 120) + '）' : ''
+      return base + extra
     }
 
     function createTranslator(ctx, lang) {
@@ -2594,10 +3025,17 @@ window.__ModuleLoader__.load({
 .ase-kw-empty{margin:4px 0 0;font-size:11.5px;color:var(--dsw-alias-label-secondary)}
 .ase-lens-label{flex:0 0 auto;font-size:10.5px;line-height:22px;color:var(--dsw-alias-label-secondary)}
 .ase-ask--drop{border-color:var(--dsw-alias-brand-primary)}
-.ase-attach{display:flex;align-items:center;gap:10px;margin-bottom:10px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;padding:6px 10px 6px 6px}
-.ase-attach img{width:54px;height:34px;object-fit:cover;border-radius:6px;display:block}
-.ase-attach-label{font-size:11.5px;color:var(--dsw-alias-label-secondary)}
-.ase-attach .ase-ghost-link{margin-left:auto;font-size:11px}
+.ase-attach{position:relative;flex:0 0 auto;width:64px;height:64px;margin-bottom:10px}
+.ase-attach-open{display:block;width:100%;height:100%;padding:0;border:0;border-radius:14px;background:transparent;line-height:0;cursor:zoom-in}
+.ase-attach-open:focus{outline:none}
+.ase-attach-open:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.ase-attach-open img{width:100%;height:100%;object-fit:cover;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;box-sizing:border-box;display:block;transition:border-color .14s}
+.ase-attach:hover .ase-attach-open img{border-color:var(--dsw-alias-border-l2)}
+.ase-attach-x{position:absolute;top:4px;right:4px;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:50%;background:#fff;color:#1c1c1e;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.35);opacity:0;pointer-events:none;transform:scale(.9);transition:opacity .14s,transform .14s,background .14s}
+.ase-attach:hover .ase-attach-x,.ase-attach:focus-within .ase-attach-x{opacity:1;pointer-events:auto;transform:none}
+.ase-attach-x:hover{background:#ececee;transform:scale(1.06)}
+.ase-attach-x:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.ase-attach-x svg{display:block}
 .ase-results-title{display:flex;align-items:baseline}
 .ase-h2{font-size:13px;font-weight:600;margin:0}
 .ase-setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:var(--dsw-alias-bg-layer-1)}
@@ -2765,7 +3203,7 @@ window.__ModuleLoader__.load({
 .ase-chip--new{width:34px;height:34px;justify-content:center;padding:0;border:0;border-radius:10px;background:var(--dsw-alias-label-primary);color:var(--dsw-alias-bg-base);font-size:15px;line-height:1}
 .ase-chip--new:hover{background:var(--dsw-alias-label-primary);opacity:.85}
 .ase-chip-input{width:150px;height:34px;border:1px solid var(--dsw-alias-brand-primary);border-radius:10px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;font-size:12.5px;padding:0 11px;outline:none}
-.ase-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);padding:9px 16px;border-radius:999px;font-size:12px;box-shadow:0 14px 40px -16px rgba(0,0,0,.6);z-index:70}
+.ase-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);padding:9px 16px;border-radius:999px;font-size:12px;box-shadow:0 14px 40px -16px rgba(0,0,0,.6);z-index:100}
 .ase-zoomable{cursor:zoom-in}
 .ase-tip{position:relative}
 .ase-tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);right:0;background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);font-size:11px;line-height:1;padding:5px 8px;border-radius:6px;white-space:nowrap;opacity:0;transform:translateY(-2px);transition:opacity .12s ease,transform .12s ease;pointer-events:none;z-index:6;box-shadow:0 10px 24px -12px rgba(0,0,0,.6)}
@@ -2775,6 +3213,8 @@ window.__ModuleLoader__.load({
 .ase-tip--top:hover::after{transform:translate(-50%,0)}
 .ase-ask-tools .ase-tip::after{top:auto;bottom:calc(100% + 6px)}
 .ase-zoom-view{position:fixed;inset:0;z-index:90;background:rgba(6,6,9,.9);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:44px}
+.ase-attach-view{padding:32px}
+.ase-attach-view-img{display:block;max-width:min(92vw,1024px);max-height:calc(100vh - 72px);width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 30px 90px -30px rgba(0,0,0,.85)}
 .ase-zoom-figure{margin:0;max-width:min(1180px,92vw);display:flex;flex-direction:column;gap:11px}
 .ase-zoom-stage{position:relative;display:flex;align-items:center;justify-content:center;min-width:min(70vw,520px);min-height:min(46vh,340px);border-radius:8px;overflow:hidden;background:#000}
 .ase-zoom-blur{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(24px) saturate(1.15);transform:scale(1.06);opacity:.6}
@@ -2790,6 +3230,12 @@ window.__ModuleLoader__.load({
 .ase-zoom-add:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.42)}
 .ase-zoom-added{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;line-height:1;padding:7px 13px;border-radius:999px;border:1px solid rgba(120,220,160,.4);color:rgba(150,235,190,.95);background:rgba(60,160,110,.14)}
 .ase-zoom-link{align-self:flex-start;font-size:11px;color:rgba(255,255,255,.6);text-decoration:underline;text-underline-offset:2px}
+.ase-imgmenu-backdrop{position:fixed;inset:0;z-index:2}
+.ase-imgmenu{position:fixed;z-index:3;box-sizing:border-box;width:164px;max-width:calc(100vw - 16px);padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(30,30,35,.96);backdrop-filter:blur(14px);box-shadow:0 18px 48px -18px rgba(0,0,0,.8)}
+.ase-imgmenu-item{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:7px;background:none;color:#fff;font:inherit;font-size:12px;line-height:1.2;text-align:left;cursor:pointer;white-space:nowrap}
+.ase-imgmenu-item:hover{background:rgba(255,255,255,.12)}
+.ase-imgmenu-item:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:-2px}
+.ase-imgmenu-item svg{display:block;flex:none;opacity:.8}
 .ase-zoom-btn{position:absolute;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(22,22,26,.65);color:#fff;font-size:17px;line-height:1;cursor:pointer}
 .ase-zoom-btn:hover{background:rgba(44,44,52,.85)}
 .ase-zoom-btn::after{border-color:rgba(255,255,255,.14)}
@@ -2798,6 +3244,7 @@ window.__ModuleLoader__.load({
 .ase-zoom-btn--next{right:18px;top:50%;transform:translateY(-50%)}
 @media (hover:none){.ase-tip::after{display:none}}
 @media (hover:none){.ase-thumb-actions{opacity:1}}
+@media (hover:none){.ase-attach-x{opacity:1;pointer-events:auto;transform:none}}
 @media (max-width:820px){.ase-topbar{flex-wrap:wrap}.ase-board-head{flex-direction:column;align-items:flex-start}}
 `
 

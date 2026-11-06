@@ -4,13 +4,13 @@
 
 ## Search
 
-One input box. Type a brief, or paste / drag / pick an image — the panel decides: an image becomes a look-alike search, text becomes a frame search.
+One input box. Type a brief, or paste / drag / pick an image — the panel decides: text becomes a frame search; an image goes to FrameThrower as a visual-similarity search and, when the web source is on, through the vision model into Bing keywords.
 
 - **AI search** (switch in the composer, left of the search button; used by both sources, and shown even when only the web source is on):
-  - On — the host's default model returns two things in one call: one English single-frame description for FrameThrower (with optional title / genre / per-title), and 2–3 short image-search phrases for the web source (keywords, not sentences; they may stay Chinese or use an official English name). The exact terms are shown per source above the grid.
-  - Off — your words go upstream untouched: FrameThrower needs English, the web source takes the brief as written.
+  - On — the host's default model returns two things in one call: one English single-frame description for FrameThrower (with optional title / genre / per-title), and 2–3 short image-search phrases for the web source (keywords, not sentences; they may stay Chinese or use an official English name). The exact terms are shown per source above the grid. With an attached image, a separate vision call reads the image (using your note as context) and produces the web phrases; FrameThrower still gets the raw image.
+  - Off — your words go upstream untouched: FrameThrower needs English, the web source takes the brief as written. For an attached image, no vision call happens: the web source uses your typed note as its query, and explains that the image itself cannot be translated when the note is empty.
   - The helper asks for the model's lowest thinking level. A thinking model whose provider maps `reasoningEfforts.off` to nothing will still think for 10s+; mapping it to `off: off` makes the call return in ~2s, otherwise it times out and falls back to the raw brief.
-- **Chinese briefs need AI.** FrameThrower matches English descriptions; a Chinese query returns its default page. With AI off the panel stops at “AI search needed” — no request, no placeholder results — and offers a one-click retry.
+- **Chinese briefs and web image search need AI.** FrameThrower matches English descriptions; a Chinese query returns its default page. Web image search needs a vision-capable model to turn an attached image into queries. With AI off the panel says so instead of sending a placeholder request.
 - **Results always belong to the current search.** The grid is cleared first, the query is always visible, and failures (no token, credits, rate limit, unreachable, upstream status) are stated plainly.
 - **Browse more** appends and de-duplicates the next page; “More frames” replaces the set instead. At the end it says “no more frames”; a failed page keeps the button and shows why.
 
@@ -19,9 +19,9 @@ One input box. Type a brief, or paste / drag / pick an image — the panel decid
 “Sources” sits in the composer toolbar next to “Keywords”. Clicking it opens per-source switches. Settings only lists sources that need a token, so the web source does not take a settings card. The choice lives in `anistyle:sources:v1`. A search only calls the sources that are on, and one source failing never hides the other source's results — the reason is listed above the grid.
 
 - **FrameThrower** — animation frames matched against English single-frame descriptions; needs a token; supports similar frames, image search and reshuffling.
-- **Chrome web images** — Bing image search, no token, Chinese works as-is; with AI on it searches the model's short phrases, and falls back to your wording when AI is off or fails. No similar frames. Bing retired its public image-search API in August 2025, so this reads the public web endpoint instead: an unofficial interface that can throttle, break on redesign, or return dead image links. Images go through the local `/anistyle/img` proxy to dodge hotlink protection and mixed content.
+- **Chrome web images** — Bing image search, no token, Chinese works as-is; with AI on it searches the model's short phrases, and falls back to your wording when AI is off or fails. Attach an image and the vision model reads it first, then searches Bing with the phrases it describes (AI off means the image cannot be translated — a typed note is used as the query instead). No similar frames. Bing retired its public image-search API in August 2025, so this reads the public web endpoint instead: an unofficial interface that can throttle, break on redesign, or return dead image links. Images go through the local `/anistyle/img` proxy to dodge hotlink protection and mixed content.
 - **Where a tile came from** — web tiles carry a “Web” badge and ↗ opens the source page; results from both sources are interleaved and de-duplicated.
-- Similar (≈) only appears on FrameThrower tiles; image search also uses FrameThrower only.
+- Similar (≈) only appears on FrameThrower tiles. An attached image goes to FrameThrower as a visual-similarity search, and to the web source through the vision model; with both sources on, the two result sets are interleaved.
 
 ### Why not Pinterest
 
@@ -45,7 +45,7 @@ Each frame shows title / year, its caption, shot tags and its own palette. Three
 | ≈ | Replace **this tile only** with a visually similar frame (FrameThrower tiles only) |
 | ↗ | Open the frame's source page |
 
-Click an image to open the lightbox: `←` `→` to move, `Esc` to close, and **＋ Add to board** at the right end of the caption row.
+Click an image to open the lightbox: `←` `→` to move, `Esc` to close, and **＋ Add to board** at the right end of the caption row. Right-click (or two-finger click on a trackpad) an image in either the frame lightbox or the attached-image preview to get a **Copy image** menu: it writes a PNG to the system clipboard, scaling down past 2400px, and says so explicitly when the browser cannot copy images.
 
 ## Moodboards
 
@@ -81,13 +81,14 @@ A frame search costs about 4 credits, a similar-frame search 2 (10 when searchin
 
 | File | Role |
 | --- | --- |
-| `index.js` | Host half: proxies FrameThrower and Bing web images, image proxy, caches searches, caches the style vocabulary for 24h, rewrites the brief with the default model, reads/writes presets |
+| `index.js` | Host half: proxies FrameThrower and Bing web images, image proxy, caches searches, caches the style vocabulary for 24h, rewrites the brief and reads attached images for web queries with the default model, reads/writes presets |
 | `client.js` | Browser half: panel UI, source switches, AI switch, moodboards in localStorage |
 | `cordis.patch.yml` | Plugin row and config |
 | `presets/moodboards.json` | Optional shared moodboards |
 | `locale/*.json` | Title and description shown in the plugin manager |
 
 - `POST /anistyle/interpret` — `{ text }` → `{ source: 'model'|'none', params }`
+- `POST /anistyle/interpret-image` — `{ image, text?, count? }` → `{ source: 'model'|'none', params: { web } }` (vision model; stores the image as a host attachment)
 - `GET /anistyle/vocabulary` — style vocabulary (proxied and cached)
 - `POST /anistyle/frames` — `{ query, style?, title?, genre?, limit, offset, perTitle }`
 - `POST /anistyle/web` — `{ query, limit, offset, lang }` → `{ source: 'chrome', frames }`
