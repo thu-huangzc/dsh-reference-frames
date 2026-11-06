@@ -105,6 +105,16 @@ window.__ModuleLoader__.load({
         .replace(/[，,、;；\s]+$/, '')
     }
     const PAGE_SIZE = 24
+    const NON_LATIN_RE = /[\u0370-\u03ff\u0400-\u052f\u0530-\u058f\u0590-\u05ff\u0600-\u06ff\u0900-\u097f\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/
+    const ACCENTED_LATIN_RE = /[\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u024f\u1e00-\u1eff]/
+    // FrameThrower only indexes English descriptions. Catch scripts that are
+    // definitely not English before sending them; accented Latin covers French,
+    // Spanish, Portuguese and friends. Plain-ASCII Latin languages are left to
+    // the model, which translates them when AI search is on.
+    const looksNonEnglish = (value) => {
+      const body = String(value || '')
+      return NON_LATIN_RE.test(body) || ACCENTED_LATIN_RE.test(body)
+    }
 
     const I18n = React.createContext((key) => key)
     const useT = () => React.useContext(I18n)
@@ -131,6 +141,9 @@ window.__ModuleLoader__.load({
         searchFail: "检索失败",
         results: "参考帧",
         more: "换一批",
+        clearAll: "清空",
+        idleTitle: "描述一个画面，或直接贴一张图",
+        idleBody: "按 Enter 开始检索，参考帧会出现在这里。",
         resultsEmpty: "没有检索到帧",
         resultsEmptyBody: "换个说法试试：补上画面里有什么、时间、天气，或者再多给一点情绪。",
         queryTerms: "检索词",
@@ -241,7 +254,7 @@ window.__ModuleLoader__.load({
         loadMore: "浏览更多",
         noMore: "没有更多了",
         aiNeeded: "需要 AI检索",
-        aiNeededBody: "FrameThrower 按英文的单帧画面描述匹配，中文原文只会让它退回默认结果。打开右下角的 AI检索，让模型把它写成英文再搜。",
+        aiNeededBody: "FrameThrower 按英文的单帧画面描述匹配，任何非英文原文（中文、日文、法文……）只会让它退回默认结果。打开右下角的 AI检索，让模型把它写成英文再搜。",
         aiNeededCta: "打开 AI检索并重试",
       },
       en: {
@@ -265,6 +278,9 @@ window.__ModuleLoader__.load({
         searchFail: "Search failed",
         results: "Reference frames",
         more: "More frames",
+        clearAll: "Clear",
+        idleTitle: "Describe a frame, or drop an image",
+        idleBody: "Press Enter to search — the frames will show up here.",
         resultsEmpty: "No frames found",
         resultsEmptyBody: "Try describing what is in frame — subject, time of day, weather, mood.",
         queryTerms: "Terms",
@@ -375,7 +391,7 @@ window.__ModuleLoader__.load({
         loadMore: "Browse more",
         noMore: "No more frames",
         aiNeeded: "AI search needed",
-        aiNeededBody: "FrameThrower matches English frame descriptions; a Chinese brief only gets its default page back. Turn on AI search in the composer to have it written in English first.",
+        aiNeededBody: "FrameThrower matches English frame descriptions; a brief in any other language — Chinese, Japanese, French, and so on — only gets its default page back. Turn on AI search in the composer to have it written in English first.",
         aiNeededCta: "Turn on AI search and retry",
       },
     }
@@ -1314,7 +1330,7 @@ window.__ModuleLoader__.load({
       const lang = T('lang') === 'en' ? 'en' : 'zh'
       const {
         query, setQuery, results, status, hint, warnings,
-        submit, more, similar, hasToken, openToken, canMore, openBoardModal, openZoom, busyId,
+        submit, more, clearAll, similar, hasToken, openToken, canMore, openBoardModal, openZoom, busyId,
         attachment, onAttachment, onClearAttachment, onImageError, onToast, understood, aiNote, failure,
         aiOn, onToggleAi, onAiRetry, canLoose, onLooseRetry,
         aiCount, onAiCount,
@@ -1708,12 +1724,20 @@ window.__ModuleLoader__.load({
             h('span', null, T('noToken')),
             h('button', { type: 'button', className: 'ase-ghost-link', onClick: openToken }, T('settings')))
           : null,
-        h('section', { className: 'ase-results' },
+        h('section', { className: 'ase-results' + (status === 'idle' && !results.length ? ' ase-results--idle' : '') },
           h('div', { className: 'ase-results-head' },
             h('div', { className: 'ase-results-title' },
               h('h2', { className: 'ase-h2' }, T('results')),
               results.length ? h('span', { className: 'ase-results-count' }, String(results.length)) : null),
             h('div', { className: 'ase-results-actions' },
+              status !== 'idle'
+                ? h('button', {
+                  type: 'button',
+                  className: 'ase-btn',
+                  'aria-label': T('clearAll'),
+                  onClick: clearAll,
+                }, T('clearAll'))
+                : null,
               status === 'ok' && canMore
                 ? h('button', { type: 'button', className: 'ase-btn', onClick: more }, T('more'))
                 : null)),
@@ -1733,6 +1757,13 @@ window.__ModuleLoader__.load({
               Array.from({ length: 8 }, (_, index) => h('div', { key: index, className: 'ase-tile ase-tile--skeleton' },
                 h('div', { className: 'ase-skeleton ase-thumb' }),
                 h('figcaption', null, h('div', { className: 'ase-skeleton', style: { height: 10, width: '70%' } })))))
+            : null,
+          status === 'idle' && !results.length
+            ? h('div', { className: 'ase-idle' },
+              h('div', { className: 'ase-idle-art', 'aria-hidden': true },
+                h('span'), h('span'), h('span')),
+              h('p', { className: 'ase-idle-title' }, T('idleTitle')),
+              h('p', { className: 'ase-idle-body' }, T('idleBody')))
             : null,
           status === 'needs-ai'
             ? h('div', { className: 'ase-empty' },
@@ -1815,6 +1846,8 @@ window.__ModuleLoader__.load({
       const [noMore, setNoMore] = useState(Boolean(restored.noMore))
       const [total, setTotal] = useState(Number(restored.total) || 0)
       const lastSearchText = useRef('')
+      // bumps on "清空" so any in-flight search cannot repopulate a cleared grid
+      const genRef = useRef(0)
       const lastSearch = useRef(
         restored.params && typeof restored.params === 'object' && typeof restored.params.query === 'string'
           ? restored.params
@@ -1897,6 +1930,7 @@ window.__ModuleLoader__.load({
       const activeBoardData = activeBoard ? boards.find((board) => board.id === activeBoard) : null
 
       const runSearch = useCallback(async (mode, styleValue) => {
+        const gen = genRef.current
         const text = String(mode && mode.text ? mode.text : query).trim()
         if (!text) return
         // pressing Enter again on the same words must start a fresh search,
@@ -1953,9 +1987,9 @@ window.__ModuleLoader__.load({
           const modelTitle = (aiParams && aiParams.title) || ''
           const modelGenre = (aiParams && aiParams.genre) || ''
           const modelPerTitle = (aiParams && aiParams.perTitle) || 3
-          if (/[\u3400-\u9fff]/.test(queryText)) {
-            // the library matches English frame descriptions; a Chinese query only
-            // returns its default page, so report "nothing found" instead of showing it
+          if (looksNonEnglish(queryText)) {
+            // the library matches English frame descriptions; a non-English query
+            // only returns its default page, so report "nothing found" instead of showing it
             return {
               id: 'framethrower',
               ok: false,
@@ -2031,16 +2065,7 @@ window.__ModuleLoader__.load({
               aiNote,
             }
           }
-          const warnings = []
-          for (const item of usable) {
-            for (const warning of item.warnings || []) {
-              const line = warning === 'web-empty' ? t('failWebEmpty') : warning
-              if (!warnings.includes(line)) warnings.push(line)
-            }
-          }
-          if (responses.some((item) => !item || item.source !== 'chrome')) {
-            warnings.push(t('failWebPartial'))
-          }
+          const warnings = webWarnings(usable, responses, t)
           return {
             id: 'chrome',
             ok: true,
@@ -2058,6 +2083,7 @@ window.__ModuleLoader__.load({
           if (chosen.includes('framethrower')) tasks.push(runFrames())
           if (chosen.includes('chrome')) tasks.push(runWeb())
           const outcomes = await Promise.all(tasks)
+          if (gen !== genRef.current) return
           const ok = outcomes.filter((outcome) => outcome.ok)
           const failed = outcomes.filter((outcome) => !outcome.ok)
 
@@ -2109,6 +2135,7 @@ window.__ModuleLoader__.load({
           if (firstNote) setAiNote(firstNote)
           setStatus(!primary.failure && needsAi ? 'needs-ai' : 'error')
         } catch (error) {
+          if (gen !== genRef.current) return
           setStatus('error')
           setFailure({ source: 'client', hint: String(error.message || error) })
           setResults([])
@@ -2116,6 +2143,7 @@ window.__ModuleLoader__.load({
       }, [query, aiOn, aiCount, enabledSources, lang, t])
 
       const submit = useCallback((override) => {
+        const gen = genRef.current
         const image = (override && override.image) || (attachment && attachment.dataUrl)
         if (image) {
           const framesReady = enabledSources.includes('framethrower') && Boolean(readToken())
@@ -2224,17 +2252,8 @@ window.__ModuleLoader__.load({
               return { id: 'chrome', ok: false, failure: { source: 'web', hint } }
             }
 
-            const warnings = []
-            if (aiOffText) warnings.push(t('imageAiOffText'))
-            for (const item of usable) {
-              for (const warning of item.warnings || []) {
-                const line = warning === 'web-empty' ? t('failWebEmpty') : warning
-                if (!warnings.includes(line)) warnings.push(line)
-              }
-            }
-            if (responses.some((item) => !item || item.source !== 'chrome')) {
-              warnings.push(t('failWebPartial'))
-            }
+            const warnings = webWarnings(usable, responses, t)
+            if (aiOffText) warnings.unshift(t('imageAiOffText'))
             return {
               id: 'chrome',
               ok: true,
@@ -2248,6 +2267,7 @@ window.__ModuleLoader__.load({
           if (framesReady) tasks.push(runFrames())
           if (webReady) tasks.push(runWeb())
           Promise.all(tasks).then((outcomes) => {
+            if (gen !== genRef.current) return
             const ok = outcomes.filter((outcome) => outcome.ok)
             const failed = outcomes.filter((outcome) => !outcome.ok)
             const warningList = []
@@ -2284,6 +2304,7 @@ window.__ModuleLoader__.load({
             setFailure(primary.failure || null)
             setStatus('error')
           }).catch((error) => {
+            if (gen !== genRef.current) return
             setStatus('error')
             setFailure({ source: 'client', hint: String((error && error.message) || error) })
             setResults([])
@@ -2332,6 +2353,7 @@ window.__ModuleLoader__.load({
       }, [lang])
 
       const loadMore = useCallback(async () => {
+        const gen = genRef.current
         if (loadingMore || !results.length || noMore) return
         // a reload restores the grid, so rebuild the request from what is on screen
         const base = lastSearch.current || (query.trim()
@@ -2347,6 +2369,7 @@ window.__ModuleLoader__.load({
         setLoadingMore(true)
         try {
           const settled = (await Promise.all(requests)).filter(Boolean)
+          if (gen !== genRef.current) return
           const seen = new Set(results.map(frameKey))
           const fresh = mergeGroups(settled.map((item) => item.frames || []))
             .filter((frame) => !seen.has(frameKey(frame)))
@@ -2364,6 +2387,7 @@ window.__ModuleLoader__.load({
             else if (sum > 0) setTotal(sum)
           }
         } catch (error) {
+          if (gen !== genRef.current) return
           setToast(String(error.message || error))
         } finally {
           setLoadingMore(false)
@@ -2371,6 +2395,7 @@ window.__ModuleLoader__.load({
       }, [loadingMore, noMore, results, page, query, enabledSources, pageRequests, t])
 
       const more = useCallback(async () => {
+        const gen = genRef.current
         if (!results.length || status !== 'ok') return
         const base = lastSearch.current || { query: query.trim(), sources: enabledSources.slice() }
         const nextPage = page + 1
@@ -2382,6 +2407,7 @@ window.__ModuleLoader__.load({
         setStatus('loading')
         try {
           const settled = (await Promise.all(requests)).filter(Boolean)
+          if (gen !== genRef.current) return
           const frames = mergeGroups(settled.map((item) => item.frames || []))
           // 换一批 replaces the current grid instead of stacking another page onto it
           setResults(frames)
@@ -2393,19 +2419,50 @@ window.__ModuleLoader__.load({
             setPage(nextPage)
           }
         } catch (error) {
+          if (gen !== genRef.current) return
           setStatus('ok')
           setToast(String(error.message || error))
         }
       }, [results, status, query, page, enabledSources, pageRequests, t])
 
+      // "清空" — one silent click clears the visible frames and every cache:
+      // the in-memory grid, the persisted view (so reload stays empty) and the
+      // host-side search / image / interpret caches. No confirm, no toast.
+      const clearAll = useCallback(() => {
+        genRef.current += 1
+        setResults([])
+        setStatus('idle')
+        setHint('')
+        setWarnings([])
+        setUnderstood('')
+        setAiNote(null)
+        setFailure(null)
+        setLastKind('text')
+        setPage(0)
+        setTotal(0)
+        setNoMore(false)
+        setLoadingMore(false)
+        setExpanding(null)
+        setSuggests(null)
+        setZoom(null)
+        setModalFrame(null)
+        lastSearch.current = null
+        lastSearchText.current = ''
+        try { window.localStorage.removeItem(VIEW_KEY) } catch {}
+        // best-effort: the host may not have restarted with the new route yet
+        api('/anistyle/clear-cache', {}).catch(() => {})
+      }, [])
+
       const similar = useCallback((frame) => {
         if (!frame || expanding) return
+        const gen = genRef.current
         // visual similarity is a FrameThrower endpoint; web tiles have no equivalent
         if (!frame.id || frame.src === 'chrome') { setToast(t('noSimilar')); return }
         const anchor = frameKey(frame)
         setExpanding(anchor)
         api('/anistyle/similar', { frameId: frame.id, limit: 12 })
           .then((data) => {
+            if (gen !== genRef.current) return
             const incoming = data.source === 'framethrower' ? (data.frames || []) : []
             const have = new Set(results.map(frameKey))
             have.delete(anchor)
@@ -2417,22 +2474,28 @@ window.__ModuleLoader__.load({
             // swap just this card: the rest of the grid stays exactly as it was
             setResults((current) => current.map((item) => (frameKey(item) === anchor ? pick : item)))
           })
-          .catch((error) => setToast(String(error.message || error)))
+          .catch((error) => {
+            if (gen !== genRef.current) return
+            setToast(String(error.message || error))
+          })
           .finally(() => setExpanding(null))
       }, [expanding, results, t])
 
       const runSuggest = useCallback((anchors) => {
         const picks = (anchors || []).filter((frame) => frame && frame.id && frame.src !== 'chrome')
         if (!picks.length) { setToast(t('noSimilar')); return }
+        const gen = genRef.current
         setSuggestBusy(picks.length === 1 ? frameKey(picks[0]) : '__multi__')
         setSuggests({ anchors: picks, frames: [], loading: true })
         api('/anistyle/similar', { frameIds: picks.map((frame) => frame.id), limit: 12 })
           .then((data) => {
+            if (gen !== genRef.current) return
             const incoming = data.source === 'framethrower' ? (data.frames || []) : []
             setSuggests({ anchors: picks, frames: incoming, loading: false })
             if (!incoming.length) setToast(data.hint || t('noSimilar'))
           })
           .catch((error) => {
+            if (gen !== genRef.current) return
             setSuggests(null)
             setToast(String(error.message || error))
           })
@@ -2672,7 +2735,7 @@ window.__ModuleLoader__.load({
             ? h(Discover, {
               state: {
                 query, setQuery, results, status, hint, warnings,
-                submit, more, similar,
+                submit, more, clearAll, similar,
                 canMore: status === 'ok' && results.length > 0 && lastKind === 'text',
                 openBoardModal: (frame) => setModalFrame(frame || {}),
                 openZoom: zoomInto(results),
@@ -2845,6 +2908,23 @@ window.__ModuleLoader__.load({
         return T('srcWeb') + ' · ' + (failure.hint || T('failWebEmpty'))
       }
       return T('srcFramethrower') + ' · ' + failureMessage(failure, T)
+    }
+
+    function webWarnings(items, responses, T) {
+      const warnings = []
+      let empty = 0
+      for (const item of items) {
+        if (!Array.isArray(item.frames) || !item.frames.length) empty += 1
+        for (const warning of item.warnings || []) {
+          if (warning === 'web-empty') continue
+          if (!warnings.includes(warning)) warnings.push(warning)
+        }
+      }
+      if (items.length && empty === items.length) warnings.push(T('failWebEmpty'))
+      else if (empty > 0 || responses.some((item) => !item || item.source !== 'chrome')) {
+        if (!warnings.includes(T('failWebPartial'))) warnings.push(T('failWebPartial'))
+      }
+      return warnings
     }
 
     function aiNoteMessage(reason, T, detail) {
@@ -3101,6 +3181,17 @@ window.__ModuleLoader__.load({
 .ase-skeleton{border-radius:10px}
 @keyframes ase-shimmer{from{background-position:120% 0}to{background-position:-20% 0}}
 .ase-empty{border:1px dashed var(--dsw-alias-border-l2);border-radius:14px;padding:32px 24px;text-align:center}
+.ase-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:min(44vh,360px);padding:40px 24px 56px;text-align:center}
+.ase-results--idle{min-height:100%;margin:0;display:flex;flex-direction:column}
+.ase-results--idle .ase-idle{flex:1 1 auto;min-height:240px}
+.ase-idle-art{position:relative;width:58px;height:36px;margin-bottom:18px}
+.ase-idle-art span{position:absolute;inset:0;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-base)}
+.ase-idle-art span:nth-child(1){transform:translate(-9px,-6px) rotate(-6deg);opacity:.34}
+.ase-idle-art span:nth-child(2){transform:translate(9px,-6px) rotate(6deg);opacity:.34}
+.ase-idle-art span:nth-child(3){background:var(--dsw-alias-bg-layer-1)}
+.ase-idle-art span:nth-child(3)::after{content:'';position:absolute;left:50%;top:50%;width:0;height:0;transform:translate(-35%,-50%);border-left:7px solid var(--dsw-alias-label-secondary);border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;opacity:.5}
+.ase-idle-title{margin:0;font-size:14px;font-weight:500;line-height:1.5;color:var(--dsw-alias-label-primary);opacity:.9}
+.ase-idle-body{max-width:520px;margin:8px 0 0;font-size:12.5px;line-height:1.7;color:var(--dsw-alias-label-secondary)}
 .ase-suggest{margin:0 0 18px;border:1px solid var(--dsw-alias-border-l1);border-radius:13px;padding:12px;background:var(--dsw-alias-bg-layer-1)}
 .ase-suggest-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
 .ase-suggest-head h3{margin:0;font-size:12.5px;font-weight:600}

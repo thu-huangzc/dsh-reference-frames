@@ -16,10 +16,33 @@ const WEB_CACHE_MAX = 80
 const IMAGE_TTL_MS = 24 * 60 * 60 * 1000
 const IMAGE_MAX_BYTES = 12 * 1024 * 1024
 const IMAGE_CACHE_BYTES = 64 * 1024 * 1024
-// Bing retired its public image-search API in 2025, so the web source reads the
-// same async fragment the site itself uses. It is a best-effort fallback: no key,
-// no quota, and it can change or throttle without notice.
+// Web image search reads public endpoints: DuckDuckGo's Bing-backed image
+// endpoint first, with Bing's own async fragment as a fallback. No key, no
+// quota, and the endpoints can change or throttle without notice.
 const WEB_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+const NON_LATIN_RE = /[\u0370-\u03ff\u0400-\u052f\u0530-\u058f\u0590-\u05ff\u0600-\u06ff\u0900-\u097f\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/
+
+/** Pick the search market from the query itself, not from the panel UI. */
+function marketFor(query) {
+  const value = String(query || '')
+  if (/[\u3040-\u30ff]/.test(value)) return 'ja-JP'
+  if (/[\uac00-\ud7af]/.test(value)) return 'ko-KR'
+  if (/[\u3400-\u9fff]/.test(value)) return 'zh-CN'
+  if (/[\u0400-\u052f]/.test(value)) return 'ru-RU'
+  if (/[\u0600-\u06ff]/.test(value)) return 'ar'
+  if (/[\u0590-\u05ff]/.test(value)) return 'he-IL'
+  if (/[\u0e00-\u0e7f]/.test(value)) return 'th-TH'
+  if (/[\u0900-\u097f]/.test(value)) return 'hi-IN'
+  return 'en-US'
+}
+
+function acceptLanguage(mkt) {
+  const market = String(mkt || 'en-US')
+  const base = market.split('-')[0]
+  if (base === 'en') return 'en-US,en;q=0.9'
+  if (!market.includes('-')) return `${market},en;q=0.8`
+  return `${market},${base};q=0.9,en;q=0.8`
+}
 
 /**
  * Host half: proxies FrameThrower so the browser never talks to it directly,
@@ -33,6 +56,7 @@ export function apply(ctx, config) {
   const cache = new Map()
   const webCache = new Map()
   const imageCache = new Map()
+  const interpretCache = new Map()
   let imageBytes = 0
   let vocabulary = null
   let lastDebug = null
@@ -110,6 +134,27 @@ export function apply(ctx, config) {
       return send(res, 200, lastDebug || { empty: true })
     }
 
+    // "清空": wipe every in-memory cache so the next search / "换一批" is fresh.
+    // Best-effort from the client (no auth, nothing except caches is touched).
+    if (req.method === 'POST' && path === '/anistyle/clear-cache') {
+      try { await readJson(req) } catch {}
+      const cleared = {
+        frames: cache.size,
+        web: webCache.size,
+        images: imageCache.size,
+        interpret: interpretCache.size,
+        vocabulary: vocabulary ? 1 : 0,
+      }
+      cache.clear()
+      webCache.clear()
+      imageCache.clear()
+      imageBytes = 0
+      interpretCache.clear()
+      vocabulary = null
+      lastDebug = null
+      return send(res, 200, { ok: true, cleared })
+    }
+
     if (req.method === 'GET' && path === '/anistyle/vocabulary') {
       const token = resolveToken(req)
       if (!token) return send(res, 200, { source: 'unconfigured' })
@@ -184,8 +229,6 @@ export function apply(ctx, config) {
     return send(res, 404, { error: 'not found' })
   }
 
-  const interpretCache = new Map()
-
   function styleVocabulary() {
     const data = vocabulary && vocabulary.data
     const groups = data && data.style_groups
@@ -215,8 +258,9 @@ export function apply(ctx, config) {
     const queries = []
     for (const item of listed) {
       let entry = text(item, 300)
-      // translation is the whole point: a Chinese query means the model echoed the brief
-      if (!entry || /[\u3400-\u9fff]/.test(entry)) continue
+      // translation is the whole point: a non-Latin query means the model
+      // echoed the brief instead of translating it for FrameThrower
+      if (!entry || NON_LATIN_RE.test(entry)) continue
       // a stray long sentence makes the search muddy, so hard-cap each one
       const words = entry.split(/\s+/).filter(Boolean)
       if (words.length > 18) entry = words.slice(0, 18).join(' ').replace(/[,;:]+$/, '')
@@ -242,7 +286,7 @@ export function apply(ctx, config) {
       queries,
       web,
       style: style && (!styles.length || styles.includes(style)) ? style : '',
-      title: title && !/[\u3400-\u9fff]/.test(title) ? title : '',
+      title: title && !NON_LATIN_RE.test(title) ? title : '',
       genre: text(parsed?.genre, 60),
       perTitle: clampInt(parsed?.perTitle, 1, 6, 3),
     }
@@ -280,6 +324,7 @@ export function apply(ctx, config) {
     const example = '[' + Array.from({ length: total }, () => 'string').join(', ') + ']'
     const system = [
       'You turn a creative brief into FrameThrower animation frame searches.',
+      'The brief can arrive in any language — Chinese, Japanese, Korean, French, Spanish, and so on. Detect it, translate the meaning, and never assume the brief is Chinese.',
       total > 1
         ? 'The library matches one single-frame description per search, so return ' + total + ' distinct readings of the brief instead of collapsing it into one scene.'
         : 'The library matches one single-frame description per search, so return one single-frame description of the brief.',
@@ -291,8 +336,8 @@ export function apply(ctx, config) {
         : 'queries: one short English phrase, 6-14 words, describing a single frame: who or what is in it, where, and the light.',
       'Plain words, no camera jargon, no comma-piled adjectives.',
       'Shape each like: "a girl on a rooftop at dusk watching the city lights".',
-      'web: ' + total + ' short keyword phrases (2-6 words each) for a web image search engine such as Bing — what a person would type to find this look.',
-      'web is keywords, not a sentence: subject, setting, light, style; keep the brief\'s language unless an official English name finds better results (死神 → Bleach). Each phrase must differ.',
+      'web: ' + total + ' short keyword phrases (2-6 words each) for a web image search engine — what a person would type to find this look.',
+      'web is keywords, not a sentence: subject, setting, light, style. Write each phrase in the brief\'s own language when that language works for image search (中文、日本語、한국어、français, ...); switch a title to its official English name only when that finds better images (死神 → Bleach, 鬼滅の刃 → Demon Slayer). Never mix languages inside one phrase. Each phrase must differ.',
       'queries and web are separate: queries describe one frame for the animation library, web is an image-search phrase.',
       'Keep what the brief states and drop the rest; never invent a plot.',
       'title: when the brief names or unmistakably implies ONE animation, put its official English title',
@@ -300,7 +345,7 @@ export function apply(ctx, config) {
       'A wrong title returns zero frames, so include it only when you actually know it; otherwise omit it',
       'and let the query carry the look. For a character, keep the character in the query and still name the title.',
       'genre: only when the brief explicitly names a genre. perTitle: 1-6, only when the brief implies it.',
-      'queries are always English, even when the brief is Chinese.',
+      'queries are always English, no matter what language the brief is written in (Chinese, Japanese, Korean, French, Spanish, and so on). Translate the meaning; never echo non-English words into queries.',
       styles.length ? 'style: only one of: ' + styles.join(' | ') + '. Omit it when nothing fits.' : 'style: omit it.',
       'Nothing but the JSON.',
     ].join(' ')
@@ -418,8 +463,9 @@ export function apply(ctx, config) {
       'Look carefully at the attached image and decide what a search engine should look for.',
       'Reply with one JSON object and nothing else:',
       '{"web":' + example + '}',
-      'web: ' + count + ' short keyword phrases (2-6 words each) for a web image search engine such as Bing.',
+      'web: ' + count + ' short keyword phrases (2-6 words each) for a web image search engine such as DuckDuckGo or Bing.',
       'Say what is visible: subject, setting, light, colour, composition and style.',
+      'The note can be in any language; detect it. Write the phrases in the note\'s language when there is one, otherwise use English, which works across the engines.',
       'If the image is a collage, moodboard or screenshot, describe the pictures inside it rather than the app interface or its text.',
       'Do not name an animation, film or artist unless the image itself proves it.',
       'The phrases must differ from each other and must be keywords, not sentences.',
@@ -565,7 +611,7 @@ export function apply(ctx, config) {
 
     const limit = clampInt(body?.limit, 1, 40, 24)
     const offset = clampInt(body?.offset, 0, 960, 0)
-    const mkt = body?.lang === 'zh' ? 'zh-CN' : 'en-US'
+    const mkt = marketFor(query)
     const key = `${mkt}|${offset}|${limit}|${query.toLowerCase()}`
 
     const cached = webCache.get(key)
@@ -573,7 +619,7 @@ export function apply(ctx, config) {
       return send(res, 200, { ...cached.value, cached: true })
     }
 
-    const result = await fetchBingImages(query, offset, limit, mkt)
+    const result = await fetchWebImages(query, offset, limit, mkt)
     if (!result.ok) return send(res, 200, result.failure)
 
     const value = {
@@ -713,6 +759,180 @@ export function apply(ctx, config) {
   ctx.effect(() => dispose)
 }
 
+/**
+ * The web source. DuckDuckGo's image endpoint (Bing-backed) is tried first for
+ * every language, with Bing's own async fragment as the fallback. A query that
+ * finds nothing in one engine can still find something in the other; a challenge
+ * page or a parser change in one endpoint does not take the whole source down.
+ */
+async function fetchWebImages(query, offset, limit, mkt) {
+  const attempts = [fetchDuckDuckGoImages, fetchBingImages]
+  const failures = []
+  let sawSuccess = false
+  for (const attempt of attempts) {
+    let result
+    try {
+      result = await attempt(query, offset, limit, mkt)
+    } catch (error) {
+      failures.push({ source: 'unreachable', frames: [], hint: String((error && error.message) || error).slice(0, 160) })
+      continue
+    }
+    if (result.ok) {
+      sawSuccess = true
+      if (result.frames.length) return result
+    } else if (result.failure) {
+      failures.push(result.failure)
+    }
+  }
+  if (sawSuccess) return { ok: true, frames: [], engine: 'web' }
+  return {
+    ok: false,
+    failure: failures[0] || { source: 'unreachable', frames: [], hint: 'Web image search is unreachable.' },
+  }
+}
+
+async function fetchDuckDuckGoImages(query, offset, limit, mkt) {
+  const headers = {
+    'User-Agent': WEB_UA,
+    Accept: 'text/html,application/xhtml+xml',
+    'Accept-Language': acceptLanguage(mkt),
+  }
+  let page
+  try {
+    page = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`, {
+      headers,
+      redirect: 'follow',
+      signal: AbortSignal.timeout(20_000),
+    })
+  } catch (error) {
+    return {
+      ok: false,
+      failure: {
+        source: 'unreachable',
+        frames: [],
+        hint: `Web image search is unreachable (${error?.name ?? 'network error'}).`,
+      },
+    }
+  }
+  if (!page.ok) {
+    return {
+      ok: false,
+      failure: {
+        source: page.status === 429 ? 'rate-limited' : 'upstream-error',
+        status: page.status,
+        frames: [],
+        hint: page.status === 429
+          ? 'DuckDuckGo is rate-limiting image search; try again later.'
+          : `DuckDuckGo image search returned ${page.status}.`,
+      },
+    }
+  }
+  const html = await page.text()
+  const token = /vqd=["']?([\d-]+)["']?/.exec(html)
+  if (!token) return { ok: true, frames: [], engine: 'ddg' }
+
+  const params = new URLSearchParams({
+    l: 'wt-wt',
+    o: 'json',
+    q: query,
+    vqd: token[1],
+    f: ',,,,',
+    p: String(Math.floor(offset / 100) + 1),
+    s: String(offset),
+  })
+  let payload
+  try {
+    payload = await fetch(`https://duckduckgo.com/i.js?${params}`, {
+      headers: {
+        ...headers,
+        Accept: 'application/json, text/javascript, */*; q=0.01',
+        Referer: 'https://duckduckgo.com/',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(20_000),
+    })
+  } catch (error) {
+    return {
+      ok: false,
+      failure: {
+        source: 'unreachable',
+        frames: [],
+        hint: `Web image search is unreachable (${error?.name ?? 'network error'}).`,
+      },
+    }
+  }
+  if (!payload.ok) {
+    return {
+      ok: false,
+      failure: {
+        source: payload.status === 429 ? 'rate-limited' : 'upstream-error',
+        status: payload.status,
+        frames: [],
+        hint: payload.status === 429
+          ? 'DuckDuckGo is rate-limiting image search; try again later.'
+          : `DuckDuckGo image search returned ${payload.status}.`,
+      },
+    }
+  }
+  let data
+  try {
+    data = await payload.json()
+  } catch {
+    return { ok: true, frames: [], engine: 'ddg' }
+  }
+  return { ok: true, frames: parseDdgFrames(data, limit), engine: 'ddg' }
+}
+
+function parseDdgFrames(data, limit) {
+  const items = data && Array.isArray(data.results) ? data.results : []
+  const frames = []
+  const seen = new Set()
+  for (const item of items) {
+    const frame = ddgToFrame(item)
+    if (!frame || seen.has(frame.id)) continue
+    seen.add(frame.id)
+    frames.push(frame)
+    if (frames.length >= Math.min(limit || 40, 40)) break
+  }
+  return frames
+}
+
+function ddgToFrame(item) {
+  if (!item || typeof item !== 'object') return null
+  const image = firstHttp([item.image, item.thumbnail])
+  if (!image) return null
+  const thumb = firstHttp([item.thumbnail, item.image, image])
+  const purl = firstHttp([item.url]) || image
+  const hash = typeof item.image_token === 'string' && item.image_token
+    ? item.image_token.slice(0, 32)
+    : hashUrl(image)
+  const title = cleanBingTitle(item.title) || hostOf(purl)
+  return {
+    id: 'web_' + hash,
+    src: 'chrome',
+    thumb,
+    image: '/anistyle/img?u=' + encodeURIComponent(image),
+    original: image,
+    link: purl,
+    title,
+    year: null,
+    slug: '',
+    caption: cleanText(item.title, 220),
+    tags: [],
+    palette: [],
+    score: null,
+    episode: null,
+    timecode: null,
+  }
+}
+
+function firstHttp(values) {
+  for (const value of values) {
+    if (typeof value === 'string' && /^https?:/i.test(value)) return value
+  }
+  return ''
+}
+
 async function fetchBingImages(query, offset, limit, mkt) {
   const params = new URLSearchParams({
     q: query,
@@ -727,7 +947,7 @@ async function fetchBingImages(query, offset, limit, mkt) {
       headers: {
         'User-Agent': WEB_UA,
         Accept: 'text/html,application/xhtml+xml',
-        'Accept-Language': mkt === 'zh-CN' ? 'zh-CN,zh;q=0.9,en;q=0.8' : 'en-US,en;q=0.9',
+        'Accept-Language': acceptLanguage(mkt),
         Referer: `https://www.bing.com/images/search?q=${encodeURIComponent(query)}`,
       },
       redirect: 'follow',
