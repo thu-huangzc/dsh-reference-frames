@@ -1,6 +1,6 @@
 # 参考帧 · DSH 插件
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+[English](../README.md) · [简体中文](README.zh-CN.md)
 
 说一句你想要的感觉，或者贴一张图，它会找出对味的真实参考帧，供你收进情绪板。内置两个检索源：FrameThrower（动画帧）和网页图片，检索时自己决定用哪些。输入支持任意语言：AI检索会把需求翻译成英文检索词交给 FrameThrower，同时让网页检索保持原文语言。
 
@@ -29,5 +29,5 @@ ln -s "$PWD/dsh-reference-frames" ~/.dsh/profiles/<profile>/node_modules/dsh-ref
 
 ## 文档
 
-- [使用与维护](docs/GUIDE.zh-CN.md) — 检索、关键词、情绪板、预设、路由、维护
-- [更新日志](CHANGELOG.md)
+- [使用与维护](GUIDE.zh-CN.md) — 检索、关键词、情绪板、预设、路由、维护
+- [更新日志](../CHANGELOG.md)
