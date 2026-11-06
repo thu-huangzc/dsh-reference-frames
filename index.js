@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,6 +16,10 @@ const WEB_CACHE_MAX = 80
 const IMAGE_TTL_MS = 24 * 60 * 60 * 1000
 const IMAGE_MAX_BYTES = 12 * 1024 * 1024
 const IMAGE_CACHE_BYTES = 64 * 1024 * 1024
+// a successful update check costs one `git fetch`; keep it out of the way for
+// a while, but retry a failed fetch sooner so a flaky network heals quickly
+const UPDATE_TTL_MS = 10 * 60 * 1000
+const UPDATE_RETRY_TTL_MS = 60 * 1000
 // Web image search reads public endpoints: DuckDuckGo's Bing-backed image
 // endpoint first, with Bing's own async fragment as a fallback. No key, no
 // quota, and the endpoints can change or throttle without notice.
@@ -91,6 +95,250 @@ export function apply(ctx, config) {
     } catch {
       return []
     }
+  }
+
+  // ---------------------------------------------------------------- 版本更新
+  // 插件本身就是一份 git 检出：查更新是 fetch 之后比较 HEAD 与 origin/<分支>，
+  // 更新是只允许 fast-forward 的合并。整个过程不碰工作区里未提交的改动，
+  // 也没有任何东西要写回磁盘以外的位置。
+  const updateRemote = typeof config?.pushRemote === 'string' && config.pushRemote.trim()
+    ? config.pushRemote.trim()
+    : 'origin'
+  const updateBranch = typeof config?.pushBranch === 'string' && config.pushBranch.trim()
+    ? config.pushBranch.trim()
+    : 'main'
+  const updateRef = updateRemote + '/' + updateBranch
+  let updateCache = null
+
+  const git = (args, timeout) => run('git', args, {
+    cwd: PLUGIN_DIR,
+    timeout: timeout || 25_000,
+    maxBuffer: 1 << 20,
+  })
+
+  function gitDetail(error) {
+    const lines = String((error && (error.stderr || error.message)) || error)
+      .split('\n').map((line) => line.trim()).filter(Boolean)
+    const errors = lines.filter((line) => /^(?:fatal|error)\b/i.test(line))
+    return (errors.slice(0, 2).join(' ') || lines.slice(-2).join(' ')).slice(0, 240)
+  }
+
+  async function gitCount(range) {
+    const out = await git(['rev-list', '--count', range], 10_000)
+    return Number.parseInt(String(out.stdout).trim(), 10) || 0
+  }
+
+  async function packageVersion(ref) {
+    try {
+      const raw = ref
+        ? String((await git(['show', ref + ':package.json'], 10_000)).stdout)
+        : await readFile(join(PLUGIN_DIR, 'package.json'), 'utf8')
+      const parsed = JSON.parse(raw)
+      return typeof parsed?.version === 'string' ? parsed.version : ''
+    } catch {
+      return ''
+    }
+  }
+
+  async function checkForUpdate(force) {
+    const cached = updateCache
+    const fresh = cached && Date.now() - cached.at < (cached.value.ok ? UPDATE_TTL_MS : UPDATE_RETRY_TTL_MS)
+    if (!force && fresh) return cached.value
+
+    const base = {
+      source: 'update',
+      remote: updateRemote,
+      branch: updateBranch,
+      current: await packageVersion(''),
+    }
+    const remember = (value) => {
+      updateCache = { at: Date.now(), value }
+      return value
+    }
+
+    try {
+      await git(['rev-parse', '--is-inside-work-tree'], 8_000)
+    } catch {
+      return remember({ ...base, ok: false, reason: 'no-repo' })
+    }
+
+    try {
+      await git(['fetch', '--quiet', '--no-tags', updateRemote, updateBranch], 20_000)
+    } catch (error) {
+      // keep the last good answer when we already had one; offline should not
+      // hide a known update
+      if (cached && cached.value.ok) return cached.value
+      return remember({ ...base, ok: false, reason: 'offline', detail: gitDetail(error) })
+    }
+
+    let behind = 0
+    let ahead = 0
+    try {
+      behind = await gitCount('HEAD..' + updateRef)
+      ahead = await gitCount(updateRef + '..HEAD')
+    } catch (error) {
+      return remember({ ...base, ok: false, reason: 'no-branch', detail: gitDetail(error) })
+    }
+
+    let head = ''
+    try { head = String((await git(['rev-parse', updateRef], 10_000)).stdout).trim() } catch {}
+    let commits = []
+    if (behind > 0) {
+      try {
+        const out = String((await git(['log', '--max-count=6', '--format=%h%x1f%s', 'HEAD..' + updateRef], 10_000)).stdout)
+        commits = out.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => {
+          const parts = line.split('\x1f')
+          return { hash: parts[0] || '', subject: parts.slice(1).join(' ') || '' }
+        })
+      } catch {}
+    }
+    const latest = behind > 0 ? await packageVersion(updateRef) : base.current
+    return remember({
+      ...base,
+      ok: true,
+      behind,
+      ahead,
+      head,
+      latest: latest || base.current,
+      commits,
+      checkedAt: Date.now(),
+    })
+  }
+
+  // paths a page reload picks up on its own; anything else means the host code
+  // changed and the app has to come back up before the update is really in
+  function isClientOnlyPath(path) {
+    if (!path) return false
+    if (path === 'client.js' || path === 'icon.svg') return true
+    if (path === 'README.md' || path === 'CHANGELOG.md' || path === 'LICENSE' || path === '.gitignore') return true
+    return path.startsWith('locale/') || path.startsWith('presets/') || path.startsWith('docs/')
+  }
+
+  async function changedFiles(from, to) {
+    if (!from || !to || from === to) return []
+    try {
+      const out = String((await git(['diff', '--name-only', from + '..' + to], 15_000)).stdout)
+      return out.split('\n').map((line) => line.trim()).filter(Boolean)
+    } catch {
+      return null
+    }
+  }
+
+  /** Active turns, queued steps and running jobs — the same work the desktop asks about before quitting. */
+  async function hasUnfinishedWork() {
+    const agents = typeof ctx.get === 'function' ? ctx.get('agents') : undefined
+    const jobs = typeof ctx.get === 'function' ? ctx.get('jobs') : undefined
+    if (!agents || !jobs || typeof agents.list !== 'function' || typeof jobs.list !== 'function') return false
+    let live = []
+    try { live = agents.list() || [] } catch { return false }
+    const busy = live.some((agent) => agent && (agent.status === 'running'
+      || (agent.inbox && agent.inbox.nextTurn && agent.inbox.nextTurn.length > 0)
+      || (agent.inbox && agent.inbox.nextStep && agent.inbox.nextStep.length > 0)))
+      || [undefined, ...live].some((agent) => {
+        try {
+          return jobs.list(agent && agent.id).some((job) => job && (job.status === 'running' || job.status === 'stopping'))
+        } catch {
+          return false
+        }
+      })
+    if (busy) return true
+    // armed reminders make the desktop ask before quitting, so treat them as work
+    if (typeof ctx.waterfall !== 'function') return false
+    for (const agent of live) {
+      try {
+        const entries = await ctx.waterfall('workspace/session-activity', { sessionId: agent && agent.id }, () => Promise.resolve([]))
+        if (Array.isArray(entries) && entries.some((entry) => entry && entry.kind === 'schedule')) return true
+      } catch {}
+    }
+    return false
+  }
+
+  /**
+   * Relaunch the desktop app so both halves boot from the new checkout.
+   * The helper is detached so it outlives this process when the app quits.
+   * When the app is idle its own quit path is silent; we only get here when
+   * nothing is running, so no confirmation box should appear.
+   */
+  function relaunchDesktopApp() {
+    const quit = 'tell application id "com.deepseek.dsh" to quit'
+    const script = [
+      'sleep 1.2',
+      'osascript -e ' + JSON.stringify(quit) + ' >/dev/null 2>&1 || osascript -e ' + JSON.stringify('tell application "DeepSeek Harness" to quit') + ' >/dev/null 2>&1',
+      'i=0',
+      'while pgrep -x "DeepSeek Harness" >/dev/null 2>&1; do i=$((i+1)); [ "$i" -ge 16 ] && break; sleep 0.5; done',
+      'open -b com.deepseek.dsh >/dev/null 2>&1 || open -a "DeepSeek Harness" >/dev/null 2>&1',
+    ].join('; ')
+    try {
+      const child = spawn('sh', ['-c', script], { detached: true, stdio: 'ignore' })
+      child.on('error', () => {})
+      child.unref()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async function restartApp(desktop) {
+    if (!desktop) return { ok: false, reason: 'not-desktop' }
+    if (process.platform !== 'darwin') return { ok: false, reason: 'unsupported' }
+    if (await hasUnfinishedWork()) return { ok: false, reason: 'busy' }
+    if (!relaunchDesktopApp()) return { ok: false, reason: 'unsupported' }
+    return { ok: true, reason: 'restarting' }
+  }
+
+  async function applyUpdate(desktop) {
+    const from = await packageVersion('')
+    try {
+      await git(['rev-parse', '--is-inside-work-tree'], 8_000)
+    } catch {
+      return { ok: false, reason: 'no-repo' }
+    }
+    let onBranch = ''
+    try {
+      onBranch = String((await git(['rev-parse', '--abbrev-ref', 'HEAD'], 8_000)).stdout).trim()
+    } catch {}
+    if (onBranch && onBranch !== 'HEAD' && onBranch !== updateBranch) {
+      return { ok: false, reason: 'wrong-branch', detail: onBranch }
+    }
+    try {
+      await git(['fetch', '--quiet', '--no-tags', updateRemote, updateBranch], 20_000)
+    } catch (error) {
+      return { ok: false, reason: 'offline', detail: gitDetail(error) }
+    }
+    let behind = 0
+    let ahead = 0
+    try {
+      behind = await gitCount('HEAD..' + updateRef)
+      ahead = await gitCount(updateRef + '..HEAD')
+    } catch {}
+    if (!behind) return { ok: true, upToDate: true, from, to: from, action: 'none' }
+    // a fast-forward cannot land on a diverged branch; say so before git does
+    if (ahead) return { ok: false, reason: 'diverged', detail: ahead + ' local commit(s)' }
+    let beforeSha = ''
+    try { beforeSha = String((await git(['rev-parse', 'HEAD'], 8_000)).stdout).trim() } catch {}
+    try {
+      await git(['merge', '--ff-only', updateRef], 30_000)
+    } catch (error) {
+      // a failed merge leaves the tree as it was; drop the cached "behind"
+      // answer so the next check re-reads the real state
+      updateCache = null
+      return { ok: false, reason: 'conflict', detail: gitDetail(error) }
+    }
+    updateCache = null
+    const to = await packageVersion('')
+    let afterSha = ''
+    try { afterSha = String((await git(['rev-parse', 'HEAD'], 8_000)).stdout).trim() } catch {}
+    const files = await changedFiles(beforeSha, afterSha)
+    const result = { ok: true, from, to: to || from, behind, files: Array.isArray(files) ? files.slice(0, 20) : [] }
+
+    // a client-only change is live after a reload; host code needs a restart.
+    // `files === null` means the diff could not be read — assume the worst.
+    if (Array.isArray(files) && files.length === 0) return { ...result, action: 'reload' }
+    if (Array.isArray(files) && files.every(isClientOnlyPath)) return { ...result, action: 'reload' }
+
+    const restart = await restartApp(desktop)
+    if (restart.ok) return { ...result, action: 'restart' }
+    return { ...result, action: restart.reason === 'busy' ? 'busy' : 'manual' }
   }
 
   async function handle(req, res) {
@@ -224,6 +472,23 @@ export function apply(ctx, config) {
         })
       }
       return path === '/anistyle/frames' ? searchFrames(body, token, res) : similarFrames(body, token, res)
+    }
+
+    if (req.method === 'GET' && path === '/anistyle/update') {
+      const force = url.searchParams.get('refresh') === '1'
+      return send(res, 200, await checkForUpdate(force))
+    }
+
+    if (req.method === 'POST' && path === '/anistyle/update') {
+      let body = {}
+      try { body = await readJson(req) } catch {}
+      return send(res, 200, await applyUpdate(body?.desktop === true))
+    }
+
+    if (req.method === 'POST' && path === '/anistyle/restart') {
+      let body = {}
+      try { body = await readJson(req) } catch {}
+      return send(res, 200, await restartApp(body?.desktop === true))
     }
 
     return send(res, 404, { error: 'not found' })

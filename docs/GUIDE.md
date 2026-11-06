@@ -71,6 +71,23 @@ config:
   pushBranch: main
 ```
 
+## Updates
+
+The plugin is a git checkout on your machine, so the panel can check for updates itself.
+
+- On load the panel quietly asks the host to `git fetch` and compare local `HEAD` with `origin/<default branch>`; the host caches the answer for 10 minutes.
+- When the branch has moved, a round brand-blue button with a downward arrow appears left of the Discover / Moodboards tabs. Hovering it reads “New version available”.
+- One click is the whole flow: the button turns into a spinner while the host fast-forwards (`git merge --ff-only`) — uncommitted local edits are never touched and history is never rewritten.
+- What happens next depends on what changed:
+  - a client-only change (`client.js`, `locale/`, docs …) reloads the panel, and the new code is live;
+  - a change to host files (`index.js`, `cordis.patch.yml`, `package.json`, …) makes the host relaunch the desktop app (quit, then reopen by bundle id) so both halves boot from the new checkout. There is no confirmation dialog in this path.
+- If a task or an armed reminder is running, the app is not killed: the button becomes “Restart to apply” and one more click restarts once the work is done.
+- Opened in a plain browser rather than the desktop window, the app is never quit; a toast asks you to restart DeepSeek Harness yourself.
+- Failures (offline, a merge blocked by local changes, a diverged branch, not on the default branch) are reported in a toast and the button returns to its normal state.
+- The gear menu ends with the current version and **Check for updates**, which forces a check past the cache.
+
+It reuses `pushRemote` / `pushBranch` from `cordis.patch.yml` (defaults `origin` / `main`).
+
 ## Token & cost
 
 Gear menu → paste the `ft_…` token. It stays in browser localStorage, travels as a request header to the local route, and is forwarded host-side; it never enters the chat or the bundle. The token only affects FrameThrower; the web-image source needs none.
@@ -97,6 +114,9 @@ A frame search costs about 4 credits, a similar-frame search 2 (10 when searchin
 - `GET /anistyle/presets` / `POST /anistyle/presets` — read / write the preset file
 - `POST /anistyle/clear-cache` — clear all in-memory caches (frame / web / image / interpret / vocabulary)
 - `GET /anistyle/last` — last upstream response (diagnostics)
+- `GET /anistyle/update` — `{ ok, current, latest, behind, ahead, commits, head }`, cached host-side for 10 minutes; `?refresh=1` forces a check
+- `POST /anistyle/update` — fast-forward the checkout to `origin/<branch>`; returns `{ ok, from, to, action }` (`reload` / `restart` / `busy` / `manual`) or why it did not happen
+- `POST /anistyle/restart` — quit and relaunch the desktop app when nothing is running, so the host loads the new code
 
 ## Maintenance
 

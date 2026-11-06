@@ -72,6 +72,23 @@ config:
   pushBranch: main
 ```
 
+## 版本更新
+
+插件本身就是本机的一份 git 检出，所以面板自己就能查更新。
+
+- 面板打开时悄悄问一次宿主：`git fetch` 后比较本地 `HEAD` 与 `origin/<主分支>`；结果在宿主侧缓存 10 分钟。
+- 有新提交时，「发现 / 情绪板」左边出现一个蓝色圆形按钮，中间是向下的箭头，悬停提示「检测到新版本」。
+- 点一下就开始：按钮原地转圈，宿主做 `git merge --ff-only`——不碰未提交的改动，也不改写历史。
+- 更新落下来之后：
+  - 只动了 `client.js`、`locale/`、文档这类文件——面板自动刷新，新代码直接生效；
+  - 动到了宿主（`index.js`、`cordis.patch.yml`、`package.json` 等）——宿主自动重启应用（退出后按 bundle id 重新拉起），两半都从新代码启动，不会再弹确认框。
+- 当时如果有任务在跑或还有已排程的提醒，不会硬重启：按钮变成「重启生效」，等任务结束再点一下重启即可。
+- 在普通浏览器里打开（不是桌面应用窗口）时不会去重启应用，只提示「已更新；重启 DeepSeek Harness 后生效」，免得把你正在用的 web 服务停掉。
+- 失败（离线、本地改动挡住合并、本地和主分支分叉、不在主分支）用一条 toast 说明原因，按钮恢复原样。
+- 齿轮菜单最底下一行是当前版本和「检查更新」，点它会强制重查、绕过缓存。
+
+重启用的还是 `cordis.patch.yml` 里那对 `pushRemote` / `pushBranch`（默认 `origin` / `main`），和预设推送一致。
+
 ## Token 与费用
 
 齿轮菜单里粘贴 `ft_…`。token 只存在浏览器 localStorage，随请求头发给本机路由，由宿主转发；不进对话，也不进打包产物。token 只影响 FrameThrower 源；网页图片源不需要 token。
@@ -98,6 +115,9 @@ config:
 - `GET /anistyle/presets` / `POST /anistyle/presets` — 读取 / 写入预设文件
 - `POST /anistyle/clear-cache` — 清空全部内存缓存（帧 / 网页 / 图片 / 改写 / 画风词表）
 - `GET /anistyle/last` — 最近一次上游响应（诊断）
+- `GET /anistyle/update` — `{ ok, current, latest, behind, ahead, commits, head }`，宿主侧缓存 10 分钟；`?refresh=1` 强制重查
+- `POST /anistyle/update` — 只做 fast-forward 合并到 `origin/<主分支>`，返回 `{ ok, from, to, action }`（`reload` / `restart` / `busy` / `manual`）或失败原因
+- `POST /anistyle/restart` — 任务空闲时退出并重新拉起桌面应用，让宿主也加载新代码
 
 ## 维护
 
