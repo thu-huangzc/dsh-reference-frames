@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.4.0 — 2026-11-06
+
+Updates land from the panel with a single click, next to a round of search and copy fixes.
 
 - AI interpretation is now language-agnostic. The helper prompt detects the brief's language and translates its meaning into English FrameThrower queries, while keeping web search phrases in the brief's language (Chinese, Japanese, Korean, French, Spanish and others). The client no longer assumes Chinese when deciding whether a brief needs AI — non-Latin scripts and accented Latin text are recognised — and web search picks its market from the query script instead of the panel UI. The “needs AI” copy now says “non-English” rather than “Chinese”.
 - Web image search now starts with DuckDuckGo's Bing-backed image endpoint for every language, with direct Bing as a fallback. This fixes the empty 「网页图片 · 没有返回图片」 warning caused by Bing's bot-challenge page (and its habit of mapping names such as 「奶龙」 to unrelated homophones). A partial empty now reads 「部分检索词没有返回图片」 instead of claiming the whole source returned nothing.
