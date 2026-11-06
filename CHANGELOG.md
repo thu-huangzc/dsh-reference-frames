@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.1 — 2026-11-06
+
+Web image search works again, and the Discover top bar drops its brand line.
+
+- Bing's `/images/async` fragment — the fallback added in 1.4.0 — now answers a plain request with a script-only stub and no result markup, so every query parsed to zero frames while the panel said 「没有返回图片」. The web source reads Bing's full server-rendered `/images/search` page again (still no key, still every language), and DuckDuckGo stays as the fallback for when Bing shows a human check. The Bing page is parsed with the same `iusc` markup as before, now tolerant of extra classes on the tile.
+- A Bing human-check page is reported as a rate-limit hint instead of looking like "this query has no images".
+- The image proxy sniffs the first bytes when a host labels a real image as `application/octet-stream` (naruto-official.com does this with its webp art), so those tiles no longer leave holes in the grid; anything that is not actually an image still gets a 415.
+- The Discover top bar no longer repeats the plugin name: the dot + “Reference Frames” line is gone and the Discover / Moodboards tabs sit flush right, so the page starts with the results.
+
 ## v1.4.0 — 2026-11-06
 
 Updates land from the panel with a single click, next to a round of search and copy fixes.

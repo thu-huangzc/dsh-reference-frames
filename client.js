@@ -2904,9 +2904,6 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'ase-root', ref: scroller },
         h('div', { className: 'ase-wrap' },
           h('header', { className: 'ase-topbar' },
-            h('div', { className: 'ase-brand' },
-              h('span', { className: 'ase-dot' }),
-              h('span', { className: 'ase-eyebrow' }, t('nav'))),
             showUpdate
               ? h('button', {
                 type: 'button',
@@ -3232,10 +3229,7 @@ window.__ModuleLoader__.load({
 .ase-dock{position:relative;z-index:6;flex:0 0 auto;padding:0 0 18px;background:var(--dsw-alias-bg-base)}
 .ase-discover > .ase-scroll{padding:0 16px 24px}
 .ase-boards{padding-top:28px}
-.ase-topbar{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:20px;margin-bottom:16px}
-.ase-brand{display:flex;align-items:center;gap:9px;margin-right:auto}
-.ase-dot{width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-brand-primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--dsw-alias-brand-primary) 18%,transparent)}
-.ase-eyebrow{font:600 10.5px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dsw-alias-label-secondary);margin:0}
+.ase-topbar{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:20px;margin-bottom:16px}
 .ase-tabs{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1)}
 .ase-tab{border:0;background:none;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12.5px;padding:6px 14px;border-radius:7px;cursor:pointer}
 .ase-tab:hover{color:var(--dsw-alias-label-primary)}

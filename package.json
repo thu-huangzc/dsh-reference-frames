@@ -1,6 +1,6 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "type": "module",
   "description": "Reference Frames — search real animation frames from a free-form brief (text or image), then collect the ones that land into moodboards.",

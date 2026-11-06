@@ -20,10 +20,10 @@ const IMAGE_CACHE_BYTES = 64 * 1024 * 1024
 // a while, but retry a failed fetch sooner so a flaky network heals quickly
 const UPDATE_TTL_MS = 10 * 60 * 1000
 const UPDATE_RETRY_TTL_MS = 60 * 1000
-// Web image search reads public endpoints: DuckDuckGo's Bing-backed image
-// endpoint first, with Bing's own async fragment as a fallback. No key, no
-// quota, and the endpoints can change or throttle without notice.
-const WEB_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+// Web image search reads public endpoints: Bing Images' server-rendered result
+// page first, with DuckDuckGo's Bing-backed image endpoint as a fallback. No
+// key, no quota, and the endpoints can change or throttle without notice.
+const WEB_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 const NON_LATIN_RE = /[\u0370-\u03ff\u0400-\u052f\u0530-\u058f\u0590-\u05ff\u0600-\u06ff\u0900-\u097f\u0e00-\u0e7f\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]/
 
 /** Pick the search market from the query itself, not from the panel UI. */
@@ -934,8 +934,6 @@ export function apply(ctx, config) {
       if (isPrivateHost(new URL(upstream.url).hostname)) return send(res, 403, { error: 'blocked redirect' })
     } catch {}
 
-    const type = String(upstream.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
-    if (!type.startsWith('image/')) return send(res, 415, { error: 'not an image' })
     const declared = Number(upstream.headers.get('content-length') || 0)
     if (declared > IMAGE_MAX_BYTES) return send(res, 413, { error: 'image too large' })
 
@@ -946,6 +944,12 @@ export function apply(ctx, config) {
       return send(res, 502, { error: 'image unreadable' })
     }
     if (!buffer.length || buffer.length > IMAGE_MAX_BYTES) return send(res, 413, { error: 'image too large' })
+
+    // some hosts (naruto-official.com among them) serve a real webp as
+    // application/octet-stream; sniff the bytes rather than leave a hole
+    const declaredType = String(upstream.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
+    const type = declaredType.startsWith('image/') ? declaredType : sniffImageType(buffer)
+    if (!type) return send(res, 415, { error: 'not an image' })
 
     const entry = { at: Date.now(), type, buffer }
     imageCache.set(key, entry)
@@ -1025,13 +1029,15 @@ export function apply(ctx, config) {
 }
 
 /**
- * The web source. DuckDuckGo's image endpoint (Bing-backed) is tried first for
- * every language, with Bing's own async fragment as the fallback. A query that
- * finds nothing in one engine can still find something in the other; a challenge
- * page or a parser change in one endpoint does not take the whole source down.
+ * The web source. Bing Images' full search page is tried first for every
+ * language, with DuckDuckGo's Bing-backed image endpoint as the fallback. A
+ * query that finds nothing in one engine can still find something in the other;
+ * a challenge page or a parser change in one endpoint does not take the whole
+ * source down. Bing's `/images/async` fragment is no longer used: since 2026 it
+ * answers a plain request with a script-only stub and no result markup.
  */
 async function fetchWebImages(query, offset, limit, mkt) {
-  const attempts = [fetchDuckDuckGoImages, fetchBingImages]
+  const attempts = [fetchBingImages, fetchDuckDuckGoImages]
   const failures = []
   let sawSuccess = false
   for (const attempt of attempts) {
@@ -1199,16 +1205,22 @@ function firstHttp(values) {
 }
 
 async function fetchBingImages(query, offset, limit, mkt) {
+  // `first` is 1-based; the async fragment Bing used to serve for scripts is
+  // gone, so read the same server-rendered page a browser lands on
   const params = new URLSearchParams({
     q: query,
-    first: String(offset),
-    count: String(limit),
+    first: String(offset + 1),
+    count: String(Math.min(Math.max(limit, 1), 35)),
     adlt: 'strict',
     mkt,
+    form: 'HDRSC3',
+    qs: 'n',
+    sp: '-1',
+    pq: query,
   })
   let upstream
   try {
-    upstream = await fetch(`https://www.bing.com/images/async?${params}`, {
+    upstream = await fetch(`https://www.bing.com/images/search?${params}`, {
       headers: {
         'User-Agent': WEB_UA,
         Accept: 'text/html,application/xhtml+xml',
@@ -1244,13 +1256,27 @@ async function fetchBingImages(query, offset, limit, mkt) {
   }
 
   const html = await upstream.text()
-  return { ok: true, frames: parseBingFrames(html) }
+  const frames = parseBingFrames(html, limit)
+  if (frames.length) return { ok: true, frames, engine: 'bing' }
+  // an empty grid and a human check both parse to nothing; say which one it was
+  if (/captcha|challenge|verify (that )?you are (a )?human/i.test(html)) {
+    return {
+      ok: false,
+      failure: {
+        source: 'rate-limited',
+        frames: [],
+        hint: 'Bing answered with a human check; try again later.',
+      },
+    }
+  }
+  return { ok: true, frames: [], engine: 'bing' }
 }
 
-function parseBingFrames(html) {
+function parseBingFrames(html, limit) {
+  const max = Math.min(Math.max(limit || 0, 1), 40)
   const frames = []
   const seen = new Set()
-  const item = /class="iusc"[^>]*?\bm="([^"]+)"/g
+  const item = /class="[^"]*\biusc\b[^"]*"[^>]*?\bm="([^"]+)"/g
   let match
   while ((match = item.exec(html))) {
     let payload
@@ -1263,7 +1289,7 @@ function parseBingFrames(html) {
     if (!frame || seen.has(frame.id)) continue
     seen.add(frame.id)
     frames.push(frame)
-    if (frames.length >= 40) break
+    if (frames.length >= max) break
   }
   return frames
 }
@@ -1357,6 +1383,17 @@ function isPrivateHost(hostname) {
     if (a === 100 && b >= 64 && b <= 127) return true
   }
   return false
+}
+
+/** Detect an image from its first bytes when the server's type is missing or wrong. */
+function sniffImageType(buffer) {
+  if (!buffer || buffer.length < 12) return ''
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg'
+  if (buffer[0] === 0x89 && buffer.toString('latin1', 1, 4) === 'PNG') return 'image/png'
+  if (buffer.toString('latin1', 0, 4) === 'GIF8') return 'image/gif'
+  if (buffer.toString('latin1', 0, 4) === 'RIFF' && buffer.toString('latin1', 8, 12) === 'WEBP') return 'image/webp'
+  if (buffer.toString('latin1', 4, 8) === 'ftyp' && /^avi[fs]$|^heic$|^mif1$/.test(buffer.toString('latin1', 8, 12))) return 'image/avif'
+  return ''
 }
 
 function sendImage(res, entry) {
