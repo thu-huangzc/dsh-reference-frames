@@ -2,7 +2,7 @@
 
 [English](README.md) · [简体中文](docs/README.zh-CN.md)
 
-Describe the feeling you want — or paste an image — and it returns real reference frames that match, which you can keep in moodboards. Two retrieval sources ship in the box: FrameThrower (animation) and web image search, and you pick which ones a search uses. Type in any language: AI search translates the brief for FrameThrower and keeps web search in the brief's own language.
+Describe the feeling you want and it returns real reference frames that match, which you can keep in moodboards.
 
 ## Install
 
