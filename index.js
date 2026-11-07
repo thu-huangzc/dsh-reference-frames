@@ -5,6 +5,26 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const API_BASE = 'https://framethrower.ai/api/v1'
+// FrameThrower keeps three independent libraries behind one token. The client
+// treats each as its own switchable source; the host maps a source to the right
+// endpoints and normalizes the three different response shapes into one frame.
+const FRAME_SOURCES = {
+  animation: {
+    search: '/animation/frames/search',
+    similar: '/animation/frames/similar',
+  },
+  film: {
+    search: '/search',
+    similar: '/similar',
+    // no image endpoint: /search/image only accepts a publicly reachable imageUrl
+  },
+  commercial: {
+    search: '/commercials/shots/search',
+    similar: '/commercials/shots/similar',
+    image: '/commercials/shots/image',
+  },
+}
+const FRAME_SOURCE_KEYS = Object.keys(FRAME_SOURCES)
 const PLUGIN_DIR = dirname(fileURLToPath(import.meta.url))
 const PRESET_PATH = join(PLUGIN_DIR, 'presets', 'moodboards.json')
 const run = promisify(execFile)
@@ -588,7 +608,7 @@ export function apply(ctx, config) {
     const styles = styleVocabulary().slice(0, 80)
     const example = '[' + Array.from({ length: total }, () => 'string').join(', ') + ']'
     const system = [
-      'You turn a creative brief into FrameThrower animation frame searches.',
+      'You turn a creative brief into FrameThrower frame searches (animation, film stills and commercial shots all share one English frame-description register).',
       'The brief can arrive in any language — Chinese, Japanese, Korean, French, Spanish, and so on. Detect it, translate the meaning, and never assume the brief is Chinese.',
       total > 1
         ? 'The library matches one single-frame description per search, so return ' + total + ' distinct readings of the brief instead of collapsing it into one scene.'
@@ -603,7 +623,7 @@ export function apply(ctx, config) {
       'Shape each like: "a girl on a rooftop at dusk watching the city lights".',
       'web: ' + total + ' short keyword phrases (2-6 words each) for a web image search engine — what a person would type to find this look.',
       'web is keywords, not a sentence: subject, setting, light, style. Write each phrase in the brief\'s own language when that language works for image search (中文、日本語、한국어、français, ...); switch a title to its official English name only when that finds better images (死神 → Bleach, 鬼滅の刃 → Demon Slayer). Never mix languages inside one phrase. Each phrase must differ.',
-      'queries and web are separate: queries describe one frame for the animation library, web is an image-search phrase.',
+      'queries and web are separate: queries describe one frame for the FrameThrower libraries, web is an image-search phrase.',
       'Keep what the brief states and drop the rest; never invent a plot.',
       'title: when the brief names or unmistakably implies ONE animation, put its official English title',
       'the library indexes — 死神 is "Bleach", 进击的巨人 is "Attack on Titan", 双城之战 is "Arcane".',
@@ -801,37 +821,58 @@ export function apply(ctx, config) {
     return typeof env === 'string' ? env.trim() : ''
   }
 
+  function frameKind(value) {
+    const kind = text(value, 20)
+    return FRAME_SOURCE_KEYS.includes(kind) ? kind : 'animation'
+  }
+
   async function searchFrames(body, token, res) {
     const query = text(body?.query, 400)
     if (!query) return send(res, 400, { error: 'missing query' })
 
-    const payload = {
-      query,
-      per_title: clampInt(body?.perTitle, 1, 6, 3),
-      nsfw: false,
-      limit: clampInt(body?.limit, 1, 24, 24),
-      offset: clampInt(body?.offset, 0, 200, 0),
-    }
-    const style = text(body?.style, 240)
-    if (style) payload.style = style
-    const genre = text(body?.genre, 120)
-    if (genre) payload.genre = genre
-    const title = text(body?.title, 120)
-    if (title) payload.title = title
+    const kind = frameKind(body?.source)
+    const spec = FRAME_SOURCES[kind]
+    const payload = { query }
 
-    const key = JSON.stringify(payload)
+    if (kind === 'animation') {
+      payload.per_title = clampInt(body?.perTitle, 1, 6, 3)
+      payload.nsfw = false
+      payload.limit = clampInt(body?.limit, 1, 24, 24)
+      payload.offset = clampInt(body?.offset, 0, 200, 0)
+      const style = text(body?.style, 240)
+      if (style) payload.style = style
+      const genre = text(body?.genre, 120)
+      if (genre) payload.genre = genre
+      const title = text(body?.title, 120)
+      if (title) payload.title = title
+    } else if (kind === 'film') {
+      payload.limit = clampInt(body?.limit, 1, 50, 24)
+      payload.offset = clampInt(body?.offset, 0, 500, 0)
+      payload.mode = 'hybrid'
+      const genre = text(body?.genre, 120)
+      if (genre) payload.genre = genre
+      const title = text(body?.title, 120)
+      if (title) payload.film_title = title
+    } else {
+      payload.limit = clampInt(body?.limit, 1, 50, 24)
+      payload.offset = clampInt(body?.offset, 0, 150, 0)
+      payload.per_spot = clampInt(body?.perSpot, 1, 6, 3)
+    }
+
+    const key = kind + '|' + JSON.stringify(payload)
     const cached = cache.get(key)
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
       return send(res, 200, { ...cached.value, cached: true })
     }
 
-    const result = await callUpstream('/animation/frames/search', payload, token, 'POST')
+    const result = await callUpstream(spec.search, payload, token, 'POST')
     if (!result.ok) return send(res, 200, result.failure)
 
     const items = pickFrames(result.json)
-    const frames = normalizeFrames(items)
+    const frames = normalizeFrames(items, kind)
     const value = {
       source: 'framethrower',
+      kind,
       frames,
       total: numberOr(result.json?.meta?.total, items.length),
       warnings: warningsOf(result.json),
@@ -842,25 +883,56 @@ export function apply(ctx, config) {
   }
 
   async function similarFrames(body, token, res) {
-    const payload = {
-      by: ['look', 'colour', 'content'].includes(body?.by) ? body.by : 'look',
-      limit: clampInt(body?.limit, 1, 24, 18),
-    }
+    const kind = frameKind(body?.source)
+    const spec = FRAME_SOURCES[kind]
+    const limit = clampInt(body?.limit, 1, 24, 18)
     const frameIds = Array.isArray(body?.frameIds)
       ? body.frameIds.filter((id) => typeof id === 'string' && id).slice(0, 10)
       : []
     const frameId = text(body?.frameId, 200)
     const image = typeof body?.image === 'string' ? body.image.trim().slice(0, 3_000_000) : ''
-    if (frameIds.length) payload.frame_ids = frameIds
-    else if (frameId) payload.frame_ids = [frameId]
-    else if (image) payload.image = image
-    else return send(res, 400, { error: 'need frameId, frameIds or image' })
+    if (!frameIds.length && !frameId && !image) {
+      return send(res, 400, { error: 'need frameId, frameIds or image' })
+    }
 
-    const result = await callUpstream('/animation/frames/similar', payload, token, 'POST')
+    let payload
+    let path = spec.similar
+    if (kind === 'animation') {
+      payload = { by: ['look', 'colour', 'content'].includes(body?.by) ? body.by : 'look', limit }
+      if (frameIds.length) payload.frame_ids = frameIds
+      else if (frameId) payload.frame_ids = [frameId]
+      else payload.image = image
+    } else if (kind === 'film') {
+      if (image && !frameIds.length && !frameId) {
+        return send(res, 200, {
+          source: 'unsupported',
+          frames: [],
+          hint: 'Film stills cannot search by image: the API needs a publicly reachable image URL.',
+        })
+      }
+      payload = {
+        mode: ['look', 'colour', 'content'].includes(body?.by) ? { look: 'visual', colour: 'color', content: 'semantic' }[body.by] : 'visual',
+        limit,
+      }
+      if (frameIds.length) payload.frameIds = frameIds
+      else payload.frameId = frameId
+    } else {
+      payload = { limit }
+      if (frameIds.length) payload.shot_ids = frameIds
+      else if (frameId) payload.shot_ids = [frameId]
+      else {
+        path = spec.image
+        payload.imageUrl = image
+        payload.per_spot = clampInt(body?.perSpot, 1, 6, 3)
+      }
+    }
+
+    const result = await callUpstream(path, payload, token, 'POST')
     if (!result.ok) return send(res, 200, result.failure)
     return send(res, 200, {
       source: 'framethrower',
-      frames: normalizeFrames(pickFrames(result.json)),
+      kind,
+      frames: normalizeFrames(pickFrames(result.json), kind),
       warnings: warningsOf(result.json),
     })
   }
@@ -1000,7 +1072,7 @@ export function apply(ctx, config) {
           hint: auth
             ? 'FrameThrower rejected the token. Create one in Settings → API.'
             : poor
-              ? 'FrameThrower credits are used up (a frame search costs 4 credits).'
+              ? 'FrameThrower credits are used up.'
               : `FrameThrower returned ${upstream.status}. ${detail.slice(0, 160)}`,
         },
       }
@@ -1403,12 +1475,12 @@ function sendImage(res, entry) {
   res.end(entry.buffer)
 }
 
-/** The API documents `{ data, meta }`; animation endpoints wrap frames a few ways. */
+/** The API documents `{ data, meta }`; the three libraries wrap frames a few ways. */
 function pickFrames(json) {
   if (!json || typeof json !== 'object') return []
   const candidates = [
-    json.data, json.frames, json.results, json.items,
-    json.data?.frames, json.data?.results, json.data?.items,
+    json.data, json.frames, json.results, json.items, json.shots, json.spots,
+    json.data?.frames, json.data?.results, json.data?.items, json.data?.shots, json.data?.spots,
   ]
   for (const candidate of candidates) {
     if (Array.isArray(candidate) && candidate.length) return candidate
@@ -1417,65 +1489,103 @@ function pickFrames(json) {
   const nested = []
   for (const item of first) {
     if (Array.isArray(item && item.frames)) nested.push(...item.frames)
+    else if (Array.isArray(item && item.shots)) nested.push(...item.shots)
   }
   return nested.length ? nested : first
 }
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
 
-function normalizeFrames(items) {
+function normalizeFrames(items, kind) {
   if (!Array.isArray(items)) return []
-  return items.slice(0, 24).map(toFrame).filter(Boolean)
+  return items.slice(0, 24).map((item) => toFrame(item, kind)).filter(Boolean)
 }
 
-function toFrame(item) {
+function firstString(...values) {
+  for (const value of values) {
+    if (typeof value === 'string' && value) return value
+  }
+  return ''
+}
+
+function toFrame(item, kind) {
   if (!item || typeof item !== 'object') return null
 
-  // `film` for film stills, `title` (or a bare object) for animation.
-  const container = item.film ?? item.title ?? item.series ?? item.animation ?? null
+  // `film` for film stills, `title` (or a bare object) for animation,
+  // `spot` / `commercial` / `ad` for a shot inside an ad.
+  const container = item.film ?? item.title ?? item.series ?? item.animation
+    ?? item.spot ?? item.commercial ?? item.ad ?? null
   const asObject = container && typeof container === 'object' ? container : null
-  const title = typeof container === 'string'
+  const spot = kind === 'commercial'
+    ? (item.spot ?? item.commercial ?? item.ad ?? asObject)
+    : null
+  let title = typeof container === 'string'
     ? container
-    : String(asObject?.title ?? asObject?.name ?? item.titleText ?? '')
-  const year = numberOr(asObject?.year ?? item.year, null)
+    : String(asObject?.title ?? asObject?.name ?? item.titleText ?? (typeof item.title === 'string' ? item.title : '') ?? '')
+  if (kind === 'commercial') {
+    const brand = firstString(spot?.brand, item.brand, item.spot_brand, item.brand_name, item.brandName, item.advertiser)
+    const name = firstString(
+      spot?.title, item.spotTitle, item.spot_title, item.ad_title, item.adTitle,
+      typeof item.title === 'string' ? item.title : '', asObject?.name,
+    )
+    title = [brand, name].filter(Boolean).join(' · ')
+  }
+  const year = numberOr(spot?.year ?? item.spot_year ?? item.spotYear ?? asObject?.year ?? item.year, null)
 
-  const thumb = String(
-    item.thumbUrl ?? item.thumbnail ?? item.thumb_url ?? item.thumbnail_url
-    ?? item.thumbnailUrl ?? item.still_url ?? item.image?.thumb ?? '',
+  const thumb = firstString(
+    item.thumbUrl, item.thumbnail, item.thumb_url, item.thumbnail_url,
+    item.thumbnailUrl, item.still_url, item.stillUrl, item.still, item.image?.thumb,
+    spot?.thumbUrl, spot?.thumb_url, spot?.still_url, spot?.stillUrl, spot?.still,
   )
-  const image = String(item.imageUrl ?? item.image_url ?? item.full_url ?? item.still_url ?? thumb)
-  const link = String(item.url ?? item.deepLink ?? item.deep_link ?? '')
+  const image = firstString(
+    item.imageUrl, item.image_url, item.full_url, item.still_url, item.stillUrl,
+    item.still, item.image?.url, item.image, item.thumbUrl, thumb,
+  )
+  const link = firstString(
+    item.url, item.link, item.deepLink, item.deep_link, item.watchUrl, item.watch_url,
+    item.shot_url, item.shotUrl, item.spot_url, item.spotUrl,
+    spot?.deepLink, spot?.deep_link, spot?.url, spot?.watchUrl, spot?.watch_url,
+  )
 
   // The documented shape nests scene data under `metadata`; the OpenAPI schema
-  // puts it at the top level. Read both.
+  // puts it at the top level. Film metadata is camelCase, animation snake_case,
+  // commercial shots mostly top-level snake_case.
   const meta = item.metadata && typeof item.metadata === 'object' ? item.metadata : {}
-  const palette = paletteOf(item.colorPalette ?? meta.colors ?? meta.colorPalette)
+  const palette = paletteOf(
+    item.palette ?? item.colorPalette ?? item.colors ?? item.color_palette
+    ?? meta.colors ?? meta.colorPalette,
+  )
 
   const tags = [
-    meta.shot_type ?? item.shot_type,
-    meta.visual_style ?? item.visual_style,
-    meta.time_of_day ?? item.time_of_day,
-    meta.setting ?? item.setting,
-    meta.lens_character ?? item.lens_character,
-  ].filter((tag) => typeof tag === 'string' && tag).slice(0, 4)
+    firstString(meta.shot_type, meta.shotType, item.shot_type, item.shotType, item.shot_size),
+    firstString(meta.visual_style, meta.visualStyle, item.visual_style),
+    firstString(meta.time_of_day, meta.timeOfDay, item.time_of_day, item.timeOfDay),
+    firstString(meta.setting, item.setting),
+    firstString(meta.lens_character, meta.lensCharacter, item.lens_character),
+    firstString(item.lighting, item.mood, meta.lightingKey),
+  ].filter(Boolean).slice(0, 4)
 
-  const caption = String(
-    item.prompt ?? meta.sceneDescription ?? item.sceneDescription
-    ?? item.colorDescription ?? meta.colorDescription ?? item.caption ?? item.description
-    ?? [meta.shot_type, meta.setting, meta.time_of_day].filter(Boolean).join(' · '),
+  const caption = firstString(
+    item.prompt, meta.sceneDescription, item.sceneDescription, item.scene_description,
+    item.caption, item.description, meta.colorDescription, item.colorDescription,
+    item.logline, spot?.logline,
+    [firstString(meta.shot_type, item.shot_size), item.setting, item.time_of_day].filter(Boolean).join(' · '),
   ).slice(0, 280)
 
   if (!thumb && !image) return null
 
+  const slug = firstString(asObject?.slug, item.slug, spot?.slug, spot?.id)
+
   return {
-    id: String(item.id ?? ''),
+    id: String(item.id ?? item.shot_id ?? item.shotId ?? ''),
     src: 'framethrower',
+    kind,
     thumb,
     image,
     link,
     title: title.slice(0, 120),
     year,
-    slug: String(asObject?.slug ?? ''),
+    slug,
     caption,
     tags,
     palette,

@@ -177,8 +177,15 @@ window.__ModuleLoader__.load({
         srcOn: "已开启",
         srcOff: "已关闭",
         srcFramethrower: "FrameThrower",
+        srcAnimation: "动画",
+        srcFilm: "电影剧照",
+        srcCommercial: "广告镜头",
         srcWeb: "网页图片",
+        familyToggle: "同时开关动画、电影、广告",
+        filmBadge: "电影",
+        adBadge: "广告",
         imageNeedsFrames: "以图检索需要网页图片源，或给 FrameThrower 填一个 token",
+        imageFilmUnsupported: "暂不支持以图检索：接口只收公开图片链接",
         imageSimilar: "相似帧",
         imageWebNeedsAi: "需要 AI 看图",
         imageNoVision: "当前默认模型不支持读图，换一个支持图片的模型",
@@ -196,6 +203,7 @@ window.__ModuleLoader__.load({
         duplicate: "这张已经在情绪板里了",
         pickBoard: "选择情绪板",
         yourBoards: "你的情绪板",
+        pickerEmpty: "还没有情绪板，先建一个",
         deleteBoard: "删除情绪板",
         pin: "置顶",
         unpin: "取消置顶",
@@ -235,7 +243,7 @@ window.__ModuleLoader__.load({
         kwRestore: "恢复默认类别",
         kwEmpty: "还没有关键词",
         failAuth: "Token 无效或已过期，去设置里重新填一个",
-        failCredits: "FrameThrower 额度不足（一次检索约 4 credits）",
+        failCredits: "FrameThrower 额度不足",
         failTooMany: "请求太频繁了，等一下再试",
         failNetwork: "连不上 FrameThrower（网络或服务故障）",
         failRejected: "请求被上游拒绝",
@@ -334,8 +342,15 @@ window.__ModuleLoader__.load({
         srcOn: "On",
         srcOff: "Off",
         srcFramethrower: "FrameThrower",
+        srcAnimation: "Animation",
+        srcFilm: "Film stills",
+        srcCommercial: "Commercial shots",
         srcWeb: "Web images",
+        familyToggle: "Toggles animation, film and commercial together",
+        filmBadge: "Film",
+        adBadge: "Ad",
         imageNeedsFrames: "Image search needs the web source, or a FrameThrower token",
+        imageFilmUnsupported: "can't search by image yet — the API needs a public image URL",
         imageSimilar: "Similar frames",
         imageWebNeedsAi: "needs AI vision",
         imageNoVision: "The default model can't read images — pick a vision model",
@@ -353,6 +368,7 @@ window.__ModuleLoader__.load({
         duplicate: "Already in this moodboard",
         pickBoard: "Choose a moodboard",
         yourBoards: "Your moodboards",
+        pickerEmpty: "No moodboards yet — create one",
         deleteBoard: "Delete moodboard",
         pin: "Pin to top",
         unpin: "Unpin",
@@ -392,7 +408,7 @@ window.__ModuleLoader__.load({
         kwRestore: "Restore defaults",
         kwEmpty: "No keywords yet",
         failAuth: "That token was rejected — update it in Settings",
-        failCredits: "Out of FrameThrower credits (a search costs about 4)",
+        failCredits: "Out of FrameThrower credits",
         failTooMany: "Rate limited — try again in a moment",
         failNetwork: "Can't reach FrameThrower (network or outage)",
         failRejected: "The upstream rejected the request",
@@ -486,22 +502,46 @@ window.__ModuleLoader__.load({
     }
 
     // Retrieval backends. Each source is independent: the user picks which ones
-    // take part in a search, and one failing never blocks the others.
+    // take part in a search, and one failing never blocks the others. The three
+    // FrameThrower libraries use one token but are toggled separately.
     const SOURCES = [
       {
         id: 'framethrower',
-        label: { zh: 'FrameThrower', en: 'FrameThrower' },
+        label: { zh: '动画帧', en: 'Animation frames' },
         kind: 'token',
+        group: 'framethrower',
         key: TOKEN_KEY,
         docs: 'https://framethrower.ai/settings?tab=api',
+      },
+      {
+        id: 'film',
+        label: { zh: '电影剧照', en: 'Film stills' },
+        kind: 'token',
+        group: 'framethrower',
+        key: TOKEN_KEY,
+      },
+      {
+        id: 'commercial',
+        label: { zh: '广告镜头', en: 'Commercial shots' },
+        kind: 'token',
+        group: 'framethrower',
+        key: TOKEN_KEY,
       },
       {
         id: 'chrome',
         label: { zh: 'Chrome 网页图片', en: 'Chrome web images' },
         kind: 'web',
+        group: 'web',
       },
     ]
     const SOURCE_IDS = SOURCES.map((source) => source.id)
+    const FRAME_SOURCE_IDS = ['framethrower', 'film', 'commercial']
+    const FRAME_SOURCE_KIND = { framethrower: 'animation', film: 'film', commercial: 'commercial' }
+    const FRAME_SOURCE_LABEL = { framethrower: 'srcAnimation', film: 'srcFilm', commercial: 'srcCommercial' }
+    const frameSourceLabel = (id, T) => T(FRAME_SOURCE_LABEL[id] || 'srcFramethrower')
+    // Film and commercials are opt-in: leaving them off keeps the old one-call
+    // search (and credit cost) intact until the user turns them on.
+    const DEFAULT_SOURCES = ['framethrower', 'chrome']
     const SRC_KEY = 'anistyle:sources:v1'
     const sourceLabel = (source, lang) => (source.label && (source.label[lang] || source.label.zh)) || source.id
 
@@ -517,12 +557,12 @@ window.__ModuleLoader__.load({
     function loadSources() {
       try {
         const raw = window.localStorage.getItem(SRC_KEY)
-        if (!raw) return SOURCE_IDS.slice()
+        if (!raw) return DEFAULT_SOURCES.slice()
         const parsed = JSON.parse(raw)
         const list = parsed && Array.isArray(parsed.enabled) ? parsed.enabled : null
-        if (!list) return SOURCE_IDS.slice()
+        if (!list) return DEFAULT_SOURCES.slice()
         return list.filter((id) => SOURCE_IDS.includes(id))
-      } catch { return SOURCE_IDS.slice() }
+      } catch { return DEFAULT_SOURCES.slice() }
     }
     function saveSources(list) {
       try { window.localStorage.setItem(SRC_KEY, JSON.stringify({ enabled: list })) } catch {}
@@ -772,7 +812,13 @@ window.__ModuleLoader__.load({
         h('figcaption', null,
           h('div', { className: 'ase-tile-head' },
             meta ? h('strong', null, meta) : null,
-            frame.src === 'chrome' ? h('span', { className: 'ase-badge' }, T('webBadge')) : null),
+            frame.src === 'chrome'
+              ? h('span', { className: 'ase-badge' }, T('webBadge'))
+              : frame.kind === 'film'
+                ? h('span', { className: 'ase-badge' }, T('filmBadge'))
+                : frame.kind === 'commercial'
+                  ? h('span', { className: 'ase-badge' }, T('adBadge'))
+                  : null),
           stripGlyphs(frame.caption) ? h('p', null, stripGlyphs(frame.caption)) : null,
           (frame.tags && frame.tags.length)
             ? h('div', { className: 'ase-tags' }, frame.tags.map((tag) => h('span', { key: tag }, tag)))
@@ -840,6 +886,72 @@ window.__ModuleLoader__.load({
                 'aria-label': T('newBoard'),
                 onClick: () => setCreating(true),
               }, '＋'))))
+    }
+
+    // Hover menu for the lightbox: pick a board without leaving the frame.
+    function BoardPicker({ frame, boards, onPick, onCreate, onEnter }) {
+      const T = useT()
+      const [creating, setCreating] = useState(false)
+      const [name, setName] = useState('')
+      const key = frameKey(frame)
+      const contains = (board) => board.items.some((item) => frameKey(item) === key)
+      const commit = () => {
+        const value = name.trim()
+        if (!value) { setCreating(false); return }
+        onCreate(value)
+        setName('')
+        setCreating(false)
+      }
+      return h('div', {
+        className: 'ase-board-pop',
+        role: 'dialog',
+        'aria-label': T('pickBoard'),
+        onMouseEnter: onEnter,
+        onClick: (event) => event.stopPropagation(),
+        onKeyDown: (event) => {
+          // arrows belong to the name field / list while the menu is open
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') event.stopPropagation()
+        },
+      },
+        h('div', { className: 'ase-board-pop-head' }, T('yourBoards')),
+        boards.length
+          ? h('div', { className: 'ase-board-pop-list' },
+            boards.map((board) => {
+              const inside = contains(board)
+              return h('button', {
+                key: board.id,
+                type: 'button',
+                className: 'ase-board-pop-item' + (inside ? ' is-in' : ''),
+                onClick: () => onPick(board.id),
+              },
+                h('span', { className: 'ase-board-pop-name' }, board.name),
+                inside ? h('span', { className: 'ase-board-pop-check' }, '✓') : null,
+                h('small', { className: 'ase-board-pop-count' }, inside ? T('added') : board.items.length + ' ' + T('items')))
+            }))
+          : h('p', { className: 'ase-board-pop-empty' }, T('pickerEmpty')),
+        creating
+          ? h('input', {
+            className: 'ase-board-pop-input',
+            placeholder: T('boardName'),
+            value: name,
+            autoFocus: true,
+            onChange: (event) => setName(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') { event.preventDefault(); commit() }
+              else if (event.key === 'Escape') {
+                event.preventDefault()
+                event.stopPropagation()
+                setName('')
+                setCreating(false)
+              }
+            },
+            onBlur: () => { if (!name.trim()) setCreating(false) },
+          })
+          : h('button', {
+            type: 'button',
+            className: 'ase-board-pop-new',
+            onClick: () => setCreating(true),
+          }, '＋ ' + T('newBoard')))
     }
 
     function BoardsHome({ boards, onCreate, onOpen, onDelete, onPin, presets, onOpenPresets, onSavePreset, savingPreset }) {
@@ -1090,7 +1202,7 @@ window.__ModuleLoader__.load({
         h('path', { d: 'M4.7 7.3 8 10.6l3.3-3.3', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }))
     }
 
-    function Settings({ drafts, configured, enabled, onToggle, onDraft, onSave, onClear, onClose, lang, onChooseLang, version, updateState, onCheckUpdate, onUpdate }) {
+    function Settings({ drafts, configured, enabled, onToggle, onToggleGroup, onDraft, onSave, onClear, onClose, lang, onChooseLang, version, updateState, onCheckUpdate, onUpdate }) {
       const T = useT()
       const info = updateState && updateState.info ? updateState.info : null
       const checking = Boolean(updateState && updateState.status === 'checking')
@@ -1117,23 +1229,38 @@ window.__ModuleLoader__.load({
             className: 'ase-btn' + (lang === 'en' ? ' ase-btn--primary' : ''),
             onClick: () => onChooseLang('en'),
           }, 'English')))
-      const sources = SOURCES.filter((source) => source.kind === 'token').map((source) => {
-        const on = (enabled || []).includes(source.id)
-        const ready = Boolean(configured[source.id])
-        return h('section', { key: source.id, className: 'ase-source' },
+      // one token card per credential, not per library: animation, film and
+      // commercials all authenticate with the same FrameThrower token
+      const tokenCards = []
+      const seenKeys = new Set()
+      for (const source of SOURCES) {
+        if (source.kind !== 'token' || seenKeys.has(source.key)) continue
+        seenKeys.add(source.key)
+        tokenCards.push({
+          source,
+          ids: SOURCES.filter((item) => item.kind === 'token' && item.key === source.key).map((item) => item.id),
+        })
+      }
+      const sources = tokenCards.map(({ source, ids }) => {
+        const on = ids.some((id) => (enabled || []).includes(id))
+        const ready = ids.some((id) => configured[id])
+        const groupSwitch = ids.length > 1
+        return h('section', { key: source.key, className: 'ase-source' },
           h('div', { className: 'ase-source-head' },
             h('div', { className: 'ase-source-title' },
-              h('strong', null, sourceLabel(source, lang)),
+              h('strong', null, source.group === 'framethrower' ? 'FrameThrower' : sourceLabel(source, lang)),
               h('span', { className: 'ase-pill' + (ready ? ' ase-pill--on' : '') },
                 ready ? T('connected') : T('notConfigured'))),
             h('button', {
               type: 'button',
               role: 'switch',
               'aria-checked': on ? 'true' : 'false',
-              'aria-label': sourceLabel(source, lang),
-              'data-tip': on ? T('srcOn') : T('srcOff'),
+              'aria-label': groupSwitch ? T('familyToggle') : sourceLabel(source, lang),
+              'data-tip': groupSwitch
+                ? T('familyToggle') + ' · ' + (on ? T('srcOn') : T('srcOff'))
+                : (on ? T('srcOn') : T('srcOff')),
               className: 'ase-switch' + (on ? ' ase-switch--on' : ''),
-              onClick: () => onToggle(source.id),
+              onClick: () => (onToggleGroup ? onToggleGroup(ids, !on) : onToggle(source.id)),
             }, h('span', { className: 'ase-switch-knob' }))),
           h('div', { className: 'ase-source-form' },
             h('input', {
@@ -1316,28 +1443,60 @@ window.__ModuleLoader__.load({
           : null)
     }
 
-    function Lightbox({ frames, index, onClose, onIndex, onAdd, addLabel, isAdded, onToast }) {
+    function Lightbox({ frames, index, onClose, onIndex, onAdd, addLabel, boards, onPickBoard, onCreateBoard, isAdded, onToast }) {
       const T = useT()
       const frame = frames[index]
       const [menu, setMenu] = useState(null)
+      const [pickerOpen, setPickerOpen] = useState(false)
+      const pickerRef = useRef(null)
+      const pickerTimer = useRef(null)
       const copyImage = useImageCopier(frame && (frame.image || frame.thumb), onToast)
+      const openPicker = useCallback(() => {
+        if (pickerTimer.current) { clearTimeout(pickerTimer.current); pickerTimer.current = null }
+        setPickerOpen(true)
+      }, [])
+      const closePickerSoon = useCallback(() => {
+        if (pickerTimer.current) clearTimeout(pickerTimer.current)
+        pickerTimer.current = setTimeout(() => {
+          pickerTimer.current = null
+          const active = typeof document === 'undefined' ? null : document.activeElement
+          // keep the menu while a name is being typed or a board item has focus
+          if (pickerRef.current && active && pickerRef.current.contains(active)) return
+          setPickerOpen(false)
+        }, 160)
+      }, [])
+      useEffect(() => () => {
+        if (pickerTimer.current) clearTimeout(pickerTimer.current)
+      }, [])
+      useEffect(() => {
+        if (!pickerOpen) return undefined
+        const onPointerDown = (event) => {
+          if (pickerRef.current && pickerRef.current.contains(event.target)) return
+          setPickerOpen(false)
+        }
+        window.addEventListener('pointerdown', onPointerDown, true)
+        return () => window.removeEventListener('pointerdown', onPointerDown, true)
+      }, [pickerOpen])
       useEffect(() => {
         const onKey = (event) => {
           if (event.key === 'Escape') {
             if (menu) setMenu(null)
+            else if (pickerOpen) setPickerOpen(false)
             else onClose()
           } else if (event.key === 'ArrowRight') {
             setMenu(null)
+            setPickerOpen(false)
             onIndex(index + 1)
           } else if (event.key === 'ArrowLeft') {
             setMenu(null)
+            setPickerOpen(false)
             onIndex(index - 1)
           }
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-      }, [index, menu, onClose, onIndex])
-      useEffect(() => { setMenu(null) }, [index])
+      }, [index, menu, pickerOpen, onClose, onIndex])
+      useEffect(() => { setMenu(null); setPickerOpen(false) }, [index])
       const imgRef = useRef(null)
       const [ready, setReady] = useState(false)
       useEffect(() => {
@@ -1354,6 +1513,44 @@ window.__ModuleLoader__.load({
       }, [frames, index])
       if (!frame) return null
       const title = [stripGlyphs(frame.title), frame.year].filter(Boolean).join(' · ')
+      const picking = Boolean(boards && onPickBoard)
+      const added = Boolean(isAdded && isAdded(frame))
+      const addControl = picking
+        ? h('div', {
+          ref: pickerRef,
+          className: 'ase-board-pop-wrap' + (pickerOpen ? ' is-open' : ''),
+          onMouseEnter: openPicker,
+          onMouseLeave: closePickerSoon,
+          onBlur: (event) => {
+            if (event.currentTarget.contains(event.relatedTarget)) return
+            if (pickerOpen) setPickerOpen(false)
+          },
+        },
+          h('button', {
+            type: 'button',
+            className: 'ase-zoom-add' + (pickerOpen ? ' is-open' : ''),
+            'aria-haspopup': 'dialog',
+            'aria-expanded': pickerOpen ? 'true' : 'false',
+            onClick: (event) => { event.stopPropagation(); openPicker() },
+          }, '＋ ' + (addLabel || T('addBoard'))),
+          pickerOpen
+            ? h(BoardPicker, {
+              frame,
+              boards,
+              onPick: (boardId) => { setPickerOpen(false); onPickBoard(boardId, frame) },
+              onCreate: (value) => { setPickerOpen(false); onCreateBoard(value, frame) },
+              onEnter: openPicker,
+            })
+            : null)
+        : onAdd
+          ? (added
+            ? h('span', { className: 'ase-zoom-added' }, '✓ ' + T('added'))
+            : h('button', {
+              type: 'button',
+              className: 'ase-zoom-add',
+              onClick: (event) => { event.stopPropagation(); onAdd(frame) },
+            }, '＋ ' + (addLabel || T('addBoard'))))
+          : null
       return h('div', { className: 'ase-zoom-view', onClick: onClose, role: 'dialog', 'aria-modal': true },
         h('button', {
           type: 'button', className: 'ase-zoom-btn ase-zoom-btn--close ase-tip',
@@ -1400,15 +1597,7 @@ window.__ModuleLoader__.load({
               frame.link
                 ? h('a', { className: 'ase-zoom-link', href: frame.link, target: '_blank', rel: 'noreferrer' }, T('openOriginal') + ' ↗')
                 : null,
-              onAdd
-                ? (isAdded && isAdded(frame)
-                  ? h('span', { className: 'ase-zoom-added' }, '✓ ' + T('added'))
-                  : h('button', {
-                    type: 'button',
-                    className: 'ase-zoom-add',
-                    onClick: (event) => { event.stopPropagation(); onAdd(frame) },
-                  }, '＋ ' + (addLabel || T('addBoard'))))
-                : null))),
+              addControl))),
         menu
           ? h(ImageContextMenu, {
             x: menu.x,
@@ -1644,8 +1833,9 @@ window.__ModuleLoader__.load({
           }, T('kwRestore'))
           : null)
 
+      const anyFrameSource = FRAME_SOURCE_IDS.some((id) => enabledSources.includes(id))
       const aiAvailable = enabledSources.includes('chrome')
-        || (enabledSources.includes('framethrower') && Boolean(readToken()))
+        || (anyFrameSource && Boolean(readToken()))
       const aiToggle = aiAvailable
         ? h('div', { className: 'ase-ai-toggle' },
           h('span', { className: 'ase-ai-label' }, T('aiSearch')),
@@ -1786,10 +1976,16 @@ window.__ModuleLoader__.load({
                   h('div', { className: 'ase-src-head' },
                     h('span', { className: 'ase-src-title' }, T('sources')),
                     h('span', { className: 'ase-src-hint' }, T('sourcesHint'))),
-                  SOURCES.map((source) => {
+                  SOURCES.map((source, index) => {
                     const on = enabledSources.includes(source.id)
                     const ready = source.kind === 'token' ? Boolean(readToken()) : true
-                    return h('button', {
+                    const first = index === 0 || SOURCES[index - 1].group !== source.group
+                    const rows = []
+                    if (first) {
+                      rows.push(h('div', { key: 'g-' + source.group, className: 'ase-src-group' },
+                        h('span', null, source.group === 'framethrower' ? 'FrameThrower' : T('srcWeb'))))
+                    }
+                    rows.push(h('button', {
                       key: source.id,
                       type: 'button',
                       role: 'switch',
@@ -1799,7 +1995,8 @@ window.__ModuleLoader__.load({
                     },
                       h('span', { className: 'ase-src-check' }, on ? '✓' : ''),
                       h('span', { className: 'ase-src-name' }, sourceLabel(source, lang)),
-                      h('span', { className: 'ase-src-state' }, ready ? (source.kind === 'token' ? T('connected') : T('noSetup')) : T('notConfigured')))
+                      h('span', { className: 'ase-src-state' }, ready ? (source.kind === 'token' ? T('connected') : T('noSetup')) : T('notConfigured'))))
+                    return rows
                   }))
                 : null),
             aiToggle,
@@ -1815,7 +2012,7 @@ window.__ModuleLoader__.load({
               h('path', { d: 'M10.4 10.4 14 14', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' })))))
       return h('section', { className: 'ase-discover' },
         h('div', { className: 'ase-scroll', ref: scrollRef },
-        !hasToken && enabledSources.includes('framethrower') && !enabledSources.includes('chrome')
+        !hasToken && anyFrameSource && !enabledSources.includes('chrome')
           ? h('p', { className: 'ase-note' },
             h('span', null, T('noToken')),
             h('button', { type: 'button', className: 'ase-ghost-link', onClick: openToken }, T('settings')))
@@ -2066,6 +2263,19 @@ window.__ModuleLoader__.load({
         })
       }, [])
 
+      // the settings card owns the shared FrameThrower token, so its switch
+      // turns the whole animation / film / commercial family on or off
+      const toggleSourceGroup = useCallback((ids, nextOn) => {
+        setEnabledSources((list) => {
+          const keep = list.filter((id) => !ids.includes(id))
+          const next = nextOn
+            ? SOURCE_IDS.filter((id) => keep.includes(id) || ids.includes(id))
+            : keep
+          saveSources(next)
+          return next
+        })
+      }, [])
+
       useEffect(() => {
         const token = readToken()
         if (!token) { setVocabulary([]); return undefined }
@@ -2133,7 +2343,7 @@ window.__ModuleLoader__.load({
         // a source that is on but not configured (no token) is skipped, not fatal
         const chosen = enabledSources.filter((id) => id === 'chrome' || Boolean(readToken()))
         if (!chosen.length) {
-          const missingToken = enabledSources.includes('framethrower') && !readToken()
+          const missingToken = FRAME_SOURCE_IDS.some((id) => enabledSources.includes(id)) && !readToken()
           setStatus('error')
           setFailure({ source: 'unconfigured', hint: missingToken ? t('noTokenHint') : t('noSources') })
           return
@@ -2162,21 +2372,23 @@ window.__ModuleLoader__.load({
           ? aiParams.web.filter((item) => typeof item === 'string' && item.trim()).slice(0, wanted)
           : []
 
-        const runFrames = async () => {
+        const runFrameSource = async (id) => {
+          const kind = FRAME_SOURCE_KIND[id]
+          const label = frameSourceLabel(id, t)
           const queryText = modelQueries[0] || (aiParams && aiParams.query) || text
           const modelStyle = (aiParams && aiParams.style) || ''
           const modelTitle = (aiParams && aiParams.title) || ''
           const modelGenre = (aiParams && aiParams.genre) || ''
           const modelPerTitle = (aiParams && aiParams.perTitle) || 3
           if (looksNonEnglish(queryText)) {
-            // the library matches English frame descriptions; a non-English query
+            // the libraries match English frame descriptions; a non-English query
             // only returns its default page, so report "nothing found" instead of showing it
             return {
-              id: 'framethrower',
+              id,
               ok: false,
               needsAi: true,
               frames: [],
-              understood: t('srcFramethrower') + ' · ' + text,
+              understood: label + ' · ' + text,
               aiNote,
             }
           }
@@ -2186,26 +2398,33 @@ window.__ModuleLoader__.load({
             : (modelQueries.length ? modelQueries.slice(0, wanted) : [queryText])
           // split one page between the readings, then interleave them below
           const perQuery = queries.length > 1 ? Math.max(6, Math.ceil(PAGE_SIZE / queries.length)) : PAGE_SIZE
-          const shared = { limit: perQuery, offset: 0, perTitle: loose ? 3 : modelPerTitle }
-          if (!loose && modelTitle) shared.title = modelTitle
-          if (!loose && modelGenre) shared.genre = modelGenre
-          const style = loose ? '' : styleValue === undefined ? modelStyle : styleValue
-          if (style) shared.style = style
-          const params = { text, queries, perQuery, query: queries[0], perTitle: shared.perTitle }
-          if (shared.title) params.title = shared.title
-          if (shared.genre) params.genre = shared.genre
-          if (shared.style) params.style = shared.style
+          const shared = { source: kind, limit: perQuery, offset: 0 }
+          if (kind === 'animation') {
+            shared.perTitle = loose ? 3 : modelPerTitle
+            if (!loose && modelTitle) shared.title = modelTitle
+            if (!loose && modelGenre) shared.genre = modelGenre
+            const style = loose ? '' : styleValue === undefined ? modelStyle : styleValue
+            if (style) shared.style = style
+          } else if (kind === 'film') {
+            // no filter hand-off: the helper's title / AniList genre are written
+            // for the animation library and would wrongly empty the film results
+          }
+          const framePage = { source: kind, queries, perQuery }
+          if (shared.perTitle) framePage.perTitle = shared.perTitle
+          if (shared.title) framePage.title = shared.title
+          if (shared.genre) framePage.genre = shared.genre
+          if (shared.style) framePage.style = shared.style
           const responses = await Promise.all(queries.map((item) => api('/anistyle/frames', { ...shared, query: item })
             .catch((error) => ({ source: 'client', hint: String((error && error.message) || error) }))))
           const usable = responses.filter((item) => item && item.source === 'framethrower')
           if (!usable.length) {
-            const first = responses[0] || {}
+            const first = responses.find(Boolean) || {}
             return {
-              id: 'framethrower',
+              id,
               ok: false,
               frames: [],
               failure: { source: first.source, status: first.status, hint: first.hint },
-              params,
+              framePage,
               aiNote,
             }
           }
@@ -2217,15 +2436,17 @@ window.__ModuleLoader__.load({
               if (!warningList.includes(warning)) warningList.push(warning)
             }
           }
+          // a source with no first page is not paged again: each page costs credits
+          framePage.empty = frames.length === 0
           return {
-            id: 'framethrower',
+            id,
             ok: true,
             frames,
             total: sum,
             warnings: warningList,
-            params,
+            framePage,
             aiNote,
-            understood: t('srcFramethrower') + ' · ' + queries.join(' · '),
+            understood: label + ' · ' + queries.join(' · '),
           }
         }
 
@@ -2261,7 +2482,9 @@ window.__ModuleLoader__.load({
 
         try {
           const tasks = []
-          if (chosen.includes('framethrower')) tasks.push(runFrames())
+          for (const id of FRAME_SOURCE_IDS) {
+            if (chosen.includes(id)) tasks.push(runFrameSource(id))
+          }
           if (chosen.includes('chrome')) tasks.push(runWeb())
           const outcomes = await Promise.all(tasks)
           if (gen !== genRef.current) return
@@ -2270,7 +2493,7 @@ window.__ModuleLoader__.load({
 
           const warningList = []
           for (const outcome of ok) {
-            const label = outcome.id === 'chrome' ? t('srcWeb') : t('srcFramethrower')
+            const label = outcome.id === 'chrome' ? t('srcWeb') : frameSourceLabel(outcome.id, t)
             for (const warning of outcome.warnings || []) {
               const line = label + ' · ' + warning
               if (!warningList.includes(line)) warningList.push(line)
@@ -2280,17 +2503,21 @@ window.__ModuleLoader__.load({
             const line = sourceFailureLine(outcome, t)
             if (line && !warningList.includes(line)) warningList.push(line)
           }
-          if (enabledSources.includes('framethrower') && !readToken()) {
-            warningList.push(t('srcFramethrower') + ' · ' + t('srcSkipped'))
+          for (const id of FRAME_SOURCE_IDS) {
+            if (enabledSources.includes(id) && !readToken()) {
+              const line = frameSourceLabel(id, t) + ' · ' + t('srcSkipped')
+              if (!warningList.includes(line)) warningList.push(line)
+            }
           }
 
           if (ok.length) {
-            const params = { text, sources: chosen.slice(), query: text }
+            const params = { text, sources: chosen.slice(), query: text, pages: {} }
             for (const outcome of ok) {
+              if (outcome.framePage) params.pages[outcome.id] = outcome.framePage
               if (outcome.params) Object.assign(params, outcome.params)
             }
             params.sources = chosen.slice()
-            params.query = Array.isArray(params.queries) && params.queries.length ? params.queries[0] : text
+            params.query = text
             lastSearch.current = params
             setResults(mergeGroups(ok.map((outcome) => outcome.frames)))
             // the web source has no total, so the count is only meaningful for FrameThrower
@@ -2327,10 +2554,13 @@ window.__ModuleLoader__.load({
         const gen = genRef.current
         const image = (override && override.image) || (attachment && attachment.dataUrl)
         if (image) {
-          const framesReady = enabledSources.includes('framethrower') && Boolean(readToken())
+          const imageFrameIds = readToken()
+            ? FRAME_SOURCE_IDS.filter((id) => enabledSources.includes(id))
+            : []
+          const framesReady = imageFrameIds.length > 0
           const webReady = enabledSources.includes('chrome')
           if (!framesReady && !webReady) {
-            const anyOn = enabledSources.includes('framethrower') || enabledSources.includes('chrome')
+            const anyOn = FRAME_SOURCE_IDS.some((id) => enabledSources.includes(id)) || enabledSources.includes('chrome')
             setStatus('error')
             setFailure({ source: 'unconfigured', hint: anyOn ? t('imageNeedsFrames') : t('noSources') })
             return
@@ -2349,21 +2579,29 @@ window.__ModuleLoader__.load({
           setTotal(0)
           setNoMore(true)
 
-          const runFrames = async () => {
-            const understood = t('srcFramethrower') + ' · ' + t('imageSimilar')
+          const runFrameImage = async (id) => {
+            const label = frameSourceLabel(id, t)
+            if (FRAME_SOURCE_KIND[id] === 'film') {
+              return {
+                id,
+                ok: false,
+                failure: { source: 'unsupported', hint: t('imageFilmUnsupported') },
+              }
+            }
+            const understood = label + ' · ' + t('imageSimilar')
             let data
             try {
-              data = await api('/anistyle/similar', { image, limit: 24 })
+              data = await api('/anistyle/similar', { source: FRAME_SOURCE_KIND[id], image, limit: 24 })
             } catch (error) {
               return {
-                id: 'framethrower',
+                id,
                 ok: false,
                 failure: { source: 'client', hint: String((error && error.message) || error) },
               }
             }
             if (data && data.source === 'framethrower') {
               return {
-                id: 'framethrower',
+                id,
                 ok: true,
                 frames: Array.isArray(data.frames) ? data.frames : [],
                 warnings: Array.isArray(data.warnings) ? data.warnings : [],
@@ -2371,7 +2609,7 @@ window.__ModuleLoader__.load({
               }
             }
             return {
-              id: 'framethrower',
+              id,
               ok: false,
               failure: { source: (data && data.source) || 'client', status: data && data.status, hint: (data && data.hint) || '' },
             }
@@ -2445,7 +2683,7 @@ window.__ModuleLoader__.load({
           }
 
           const tasks = []
-          if (framesReady) tasks.push(runFrames())
+          for (const id of imageFrameIds) tasks.push(runFrameImage(id))
           if (webReady) tasks.push(runWeb())
           Promise.all(tasks).then((outcomes) => {
             if (gen !== genRef.current) return
@@ -2453,7 +2691,7 @@ window.__ModuleLoader__.load({
             const failed = outcomes.filter((outcome) => !outcome.ok)
             const warningList = []
             for (const outcome of ok) {
-              const label = outcome.id === 'chrome' ? t('srcWeb') : t('srcFramethrower')
+              const label = outcome.id === 'chrome' ? t('srcWeb') : frameSourceLabel(outcome.id, t)
               for (const warning of outcome.warnings || []) {
                 const line = label + ' · ' + warning
                 if (!warningList.includes(line)) warningList.push(line)
@@ -2463,9 +2701,11 @@ window.__ModuleLoader__.load({
               const line = sourceFailureLine(outcome, t)
               if (line && !warningList.includes(line)) warningList.push(line)
             }
-            if (enabledSources.includes('framethrower') && !readToken()) {
-              const line = t('srcFramethrower') + ' · ' + t('srcSkipped')
-              if (!warningList.includes(line)) warningList.push(line)
+            for (const id of FRAME_SOURCE_IDS) {
+              if (enabledSources.includes(id) && !readToken()) {
+                const line = frameSourceLabel(id, t) + ' · ' + t('srcSkipped')
+                if (!warningList.includes(line)) warningList.push(line)
+              }
             }
 
             if (ok.length) {
@@ -2499,22 +2739,30 @@ window.__ModuleLoader__.load({
       // FrameThrower pages by query batch; the web source pages by result offset.
       const pageRequests = useCallback((base, nextPage) => {
         const sources = Array.isArray(base.sources) && base.sources.length ? base.sources : ['framethrower']
-        const batches = Array.isArray(base.queries) && base.queries.length
-          ? base.queries.slice(0, 3)
-          : (base.query ? [base.query] : [])
+        const pages = base.pages && typeof base.pages === 'object' ? base.pages : {}
         const requests = []
-        if (sources.includes('framethrower') && batches.length) {
-          const perQuery = base.perQuery || Math.ceil(PAGE_SIZE / batches.length)
-          if (nextPage * perQuery <= 200) {
-            const shared = { limit: perQuery, offset: nextPage * perQuery, perTitle: base.perTitle || 3 }
-            if (base.title) shared.title = base.title
-            if (base.genre) shared.genre = base.genre
-            if (base.style) shared.style = base.style
-            for (const item of batches) {
-              requests.push(api('/anistyle/frames', { ...shared, query: item })
-                .then((data) => (data && data.source === 'framethrower' ? data : null))
-                .catch(() => null))
-            }
+        for (const id of FRAME_SOURCE_IDS) {
+          if (!sources.includes(id)) continue
+          const saved = pages[id] && typeof pages[id] === 'object' ? pages[id] : null
+          if (saved && saved.empty) continue
+          const batches = saved && Array.isArray(saved.queries) && saved.queries.length
+            ? saved.queries.slice(0, 3)
+            : (Array.isArray(base.queries) && base.queries.length
+              ? base.queries.slice(0, 3)
+              : (base.query ? [base.query] : []))
+          if (!batches.length) continue
+          const perQuery = (saved && saved.perQuery) || base.perQuery || Math.ceil(PAGE_SIZE / batches.length)
+          const cap = id === 'film' ? 500 : id === 'commercial' ? 150 : 200
+          if (nextPage * perQuery > cap) continue
+          const shared = { source: FRAME_SOURCE_KIND[id], limit: perQuery, offset: nextPage * perQuery }
+          if (saved && saved.perTitle) shared.perTitle = saved.perTitle
+          if (saved && saved.title) shared.title = saved.title
+          if (saved && saved.genre) shared.genre = saved.genre
+          if (saved && saved.style) shared.style = saved.style
+          for (const item of batches) {
+            requests.push(api('/anistyle/frames', { ...shared, query: item })
+              .then((data) => (data && data.source === 'framethrower' ? data : null))
+              .catch(() => null))
           }
         }
         if (sources.includes('chrome')) {
@@ -2641,7 +2889,7 @@ window.__ModuleLoader__.load({
         if (!frame.id || frame.src === 'chrome') { setToast(t('noSimilar')); return }
         const anchor = frameKey(frame)
         setExpanding(anchor)
-        api('/anistyle/similar', { frameId: frame.id, limit: 12 })
+        api('/anistyle/similar', { source: frame.kind || 'animation', frameId: frame.id, limit: 12 })
           .then((data) => {
             if (gen !== genRef.current) return
             const incoming = data.source === 'framethrower' ? (data.frames || []) : []
@@ -2668,12 +2916,26 @@ window.__ModuleLoader__.load({
         const gen = genRef.current
         setSuggestBusy(picks.length === 1 ? frameKey(picks[0]) : '__multi__')
         setSuggests({ anchors: picks, frames: [], loading: true })
-        api('/anistyle/similar', { frameIds: picks.map((frame) => frame.id), limit: 12 })
-          .then((data) => {
+        // frame ids only make sense inside their own library: a mixed board
+        // asks each library once and interleaves the answers
+        const byKind = new Map()
+        for (const frame of picks) {
+          const kind = ['animation', 'film', 'commercial'].includes(frame.kind) ? frame.kind : 'animation'
+          if (!byKind.has(kind)) byKind.set(kind, [])
+          byKind.get(kind).push(frame.id)
+        }
+        const calls = Array.from(byKind.entries()).map(([kind, ids]) => api('/anistyle/similar', {
+          source: kind,
+          frameIds: ids,
+          limit: 12,
+        }).catch(() => null))
+        Promise.all(calls)
+          .then((answers) => {
             if (gen !== genRef.current) return
-            const incoming = data.source === 'framethrower' ? (data.frames || []) : []
+            const usable = answers.filter((data) => data && data.source === 'framethrower')
+            const incoming = mergeGroups(usable.map((data) => data.frames || []))
             setSuggests({ anchors: picks, frames: incoming, loading: false })
-            if (!incoming.length) setToast(data.hint || t('noSimilar'))
+            if (!incoming.length) setToast((answers.find(Boolean) && answers.find(Boolean).hint) || t('noSimilar'))
           })
           .catch((error) => {
             if (gen !== genRef.current) return
@@ -2846,6 +3108,17 @@ window.__ModuleLoader__.load({
         if (!keepOpen) setModalFrame(null)
       }, [boards, t])
 
+      const createBoardWithFrame = useCallback((rawName, frame) => {
+        const board = createBoard(rawName)
+        if (frame && frameKey(frame)) {
+          setBoards((list) => list.map((entry) => entry.id === board.id
+            ? { ...entry, updatedAt: Date.now(), items: [frame, ...entry.items] }
+            : entry))
+        }
+        setToast(t('added') + ' 《' + board.name + '》')
+        return board
+      }, [createBoard, t])
+
       const removeFromBoard = useCallback((boardId, frame) => {
         setBoards((list) => list.map((board) => board.id === boardId
           ? { ...board, updatedAt: Date.now(), items: board.items.filter((item) => frameKey(item) !== frameKey(frame)) }
@@ -2867,7 +3140,7 @@ window.__ModuleLoader__.load({
           if (stripGlyphs(frame.caption)) lines.push('   ' + stripGlyphs(frame.caption))
           if (frame.tags && frame.tags.length) lines.push('   ' + frame.tags.join(' · '))
           if (frame.palette && frame.palette.length) lines.push('   ' + frame.palette.join(' '))
-          if (frame.link) lines.push('   [' + (frame.src === 'chrome' ? 'web' : 'FrameThrower') + '](' + frame.link + ')')
+          if (frame.link) lines.push('   [' + (frame.src === 'chrome' ? 'web' : (frame.kind || 'FrameThrower')) + '](' + frame.link + ')')
           lines.push('   ![frame](' + (frame.original || frame.image || frame.thumb) + ')')
           lines.push('')
         })
@@ -2966,7 +3239,11 @@ window.__ModuleLoader__.load({
                 canLoadMore: status === 'ok' && results.length > 0 && lastKind === 'text' && !noMore
                   && (!total || results.length < total),
                 noMore,
-                canLoose: Boolean(lastSearch.current && (lastSearch.current.title || lastSearch.current.genre || lastSearch.current.style)),
+                canLoose: Boolean(lastSearch.current && lastSearch.current.pages
+                  && lastSearch.current.pages.framethrower
+                  && (lastSearch.current.pages.framethrower.title
+                    || lastSearch.current.pages.framethrower.genre
+                    || lastSearch.current.pages.framethrower.style)),
                 onLooseRetry: () => runSearch({ text: query, loose: true }),
                 enabledSources, onToggleSource: toggleSource,
                 hasToken, openToken: () => {
@@ -3017,16 +3294,7 @@ window.__ModuleLoader__.load({
             boards,
             onClose: () => setModalFrame(null),
             onAdd: (boardId) => addToBoard(boardId, modalFrame, true),
-            onCreate: (name) => {
-              const board = createBoard(name)
-              const item = modalFrame && frameKey(modalFrame) ? modalFrame : null
-              if (item) {
-                setBoards((list) => list.map((entry) => entry.id === board.id
-                  ? { ...entry, updatedAt: Date.now(), items: [item] }
-                  : entry))
-              }
-              setToast(t('added') + ' 《' + board.name + '》')
-            },
+            onCreate: (name) => createBoardWithFrame(name, modalFrame),
           })
           : null,
         zoom
@@ -3036,16 +3304,15 @@ window.__ModuleLoader__.load({
             onClose: () => setZoom(null),
             onToast: (message) => setToast(message),
             addLabel: zoom.boardId ? t('addToBoard') : null,
+            boards: zoom.boardId ? null : sortedBoards,
+            onPickBoard: zoom.boardId ? null : (boardId, frame) => addToBoard(boardId, frame, true),
+            onCreateBoard: zoom.boardId ? null : createBoardWithFrame,
             isAdded: (frame) => {
               if (!zoom.boardId) return false
               const board = boards.find((item) => item.id === zoom.boardId)
               return Boolean(board && board.items.some((item) => frameKey(item) === frameKey(frame)))
             },
-            onAdd: (frame) => {
-              if (zoom.boardId) { addToBoard(zoom.boardId, frame); return }
-              setZoom(null)
-              setModalFrame(frame)
-            },
+            onAdd: zoom.boardId ? (frame) => addToBoard(zoom.boardId, frame) : null,
             onIndex: (index) => setZoom((current) => {
               if (!current) return current
               const next = Math.max(0, Math.min(current.frames.length - 1, index))
@@ -3059,6 +3326,7 @@ window.__ModuleLoader__.load({
             configured: Object.fromEntries(SOURCES.map((source) => [source.id, Boolean(source.key && readKey(source.key))])),
             enabled: enabledSources,
             onToggle: toggleSource,
+            onToggleGroup: toggleSourceGroup,
             onDraft: (id, value) => setDrafts((current) => ({ ...current, [id]: value })),
             onSave: (source) => {
               writeKey(source.key, String(drafts[source.id] || '').trim())
@@ -3100,6 +3368,7 @@ window.__ModuleLoader__.load({
       if (status === 402) return T('failCredits')
       if (status === 429) return T('failTooMany')
       if (failure.source === 'unreachable') return T('failNetwork')
+      if (failure.source === 'unsupported') return failure.hint || T('resultsEmptyBody')
       if (status === 400) return T('failRejected') + (failure.hint ? ' · ' + failure.hint : '')
       if (status) return T('failStatus') + ' ' + status + (failure.hint ? ' · ' + failure.hint : '')
       return failure.hint || T('resultsEmptyBody')
@@ -3107,7 +3376,7 @@ window.__ModuleLoader__.load({
 
     function sourceFailureLine(outcome, T) {
       if (!outcome) return ''
-      if (outcome.needsAi) return T('srcFramethrower') + ' · ' + T('aiNeeded')
+      if (outcome.needsAi) return frameSourceLabel(outcome.id, T) + ' · ' + T('aiNeeded')
       const failure = outcome.failure || {}
       if (outcome.id === 'chrome') {
         if (failure.source === 'unreachable') return T('srcWeb') + ' · ' + T('failWebNetwork')
@@ -3115,7 +3384,7 @@ window.__ModuleLoader__.load({
         if (failure.status) return T('srcWeb') + ' · ' + T('failStatus') + ' ' + failure.status
         return T('srcWeb') + ' · ' + (failure.hint || T('failWebEmpty'))
       }
-      return T('srcFramethrower') + ' · ' + failureMessage(failure, T)
+      return frameSourceLabel(outcome.id, T) + ' · ' + failureMessage(failure, T)
     }
 
     function webWarnings(items, responses, T) {
@@ -3287,6 +3556,7 @@ window.__ModuleLoader__.load({
 .ase-src-row.is-on .ase-src-check{background:var(--dsw-alias-brand-primary);border-color:transparent}
 .ase-src-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ase-src-state{flex:0 0 auto;font-size:10px;color:var(--dsw-alias-label-secondary)}
+.ase-src-group{display:flex;align-items:baseline;gap:6px;padding:7px 6px 2px;font-size:10px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--dsw-alias-label-secondary)}
 .ase-kw-panel{position:absolute;left:44px;bottom:calc(100% + 8px);z-index:20;width:min(620px,calc(100% - 44px));max-height:min(52vh,440px);overflow-y:auto;overscroll-behavior:contain;margin:0;padding:12px 13px;border-radius:12px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);box-shadow:0 24px 60px -28px rgba(0,0,0,.65);box-sizing:border-box}
 .ase-kw-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .ase-kw-head .ase-ghost-link{margin-left:auto}
@@ -3538,6 +3808,24 @@ window.__ModuleLoader__.load({
 .ase-zoom-actions{display:flex;align-items:center;gap:14px;margin-top:2px}
 .ase-zoom-add{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:11.5px;line-height:1;padding:7px 13px;border-radius:999px;cursor:pointer;transition:background .14s,border-color .14s}
 .ase-zoom-add:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.42)}
+.ase-zoom-add.is-open,.ase-zoom-add:focus-visible{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5);outline:none}
+.ase-board-pop-wrap{position:relative;margin-left:auto;display:inline-flex}
+.ase-board-pop-wrap.is-open::before{content:"";position:absolute;left:-6px;right:-6px;bottom:100%;height:14px}
+.ase-board-pop{position:absolute;right:0;bottom:calc(100% + 8px);z-index:7;box-sizing:border-box;width:244px;max-height:min(52vh,320px);overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(26,26,31,.97);backdrop-filter:blur(18px);box-shadow:0 24px 64px -22px rgba(0,0,0,.9);color:#fff;text-align:left}
+.ase-board-pop-head{padding:6px 9px 5px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+.ase-board-pop-list{display:flex;flex-direction:column;gap:1px}
+.ase-board-pop-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 9px;border:0;border-radius:8px;background:none;color:rgba(255,255,255,.9);font:inherit;font-size:12px;line-height:1.2;text-align:left;cursor:pointer}
+.ase-board-pop-item:hover,.ase-board-pop-item:focus-visible{background:rgba(255,255,255,.1);outline:none}
+.ase-board-pop-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ase-board-pop-count{flex:none;font-size:10px;color:rgba(255,255,255,.42);white-space:nowrap}
+.ase-board-pop-item.is-in .ase-board-pop-name{color:rgba(255,255,255,.55)}
+.ase-board-pop-item.is-in .ase-board-pop-count{color:rgba(126,226,168,.9)}
+.ase-board-pop-check{flex:none;color:#7ee2a8;font-size:11px;line-height:1}
+.ase-board-pop-empty{margin:2px 9px 8px;font-size:11px;line-height:1.5;color:rgba(255,255,255,.45)}
+.ase-board-pop-new{display:flex;align-items:center;gap:6px;width:100%;margin-top:3px;padding:8px 9px;border:0;border-top:1px solid rgba(255,255,255,.1);border-radius:8px;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:11.5px;line-height:1.2;text-align:left;cursor:pointer}
+.ase-board-pop-new:hover,.ase-board-pop-new:focus-visible{background:rgba(255,255,255,.1);color:#fff;outline:none}
+.ase-board-pop-input{box-sizing:border-box;width:100%;height:32px;margin-top:3px;border:1px solid rgba(255,255,255,.24);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:12px;padding:0 9px;outline:none}
+.ase-board-pop-input:focus{border-color:rgba(255,255,255,.55)}
 .ase-zoom-added{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;line-height:1;padding:7px 13px;border-radius:999px;border:1px solid rgba(120,220,160,.4);color:rgba(150,235,190,.95);background:rgba(60,160,110,.14)}
 .ase-zoom-link{align-self:flex-start;font-size:11px;color:rgba(255,255,255,.6);text-decoration:underline;text-underline-offset:2px}
 .ase-imgmenu-backdrop{position:fixed;inset:0;z-index:2}

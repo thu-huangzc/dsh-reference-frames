@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.5.0 — 2026-11-07
+
+FrameThrower is now three selectable reference sources, and the lightbox picks a moodboard on hover.
+
+- **Film stills and commercial shots are independent sources.** The Sources picker groups Animation frames, Film stills and Commercial shots under FrameThrower; the three switches are independent and use the existing `ft_…` token. Film calls `POST /search`; commercial shots call `POST /commercials/shots/search`. Both are **off on first run**, so the default search stays one request at the old cost — turn them on under Sources.
+- Film and commercial results are normalized into the existing tile shape: title / brand, year, caption, shot tags, palette and link. Film tiles carry a “Film” badge, commercial shots “Ad”, and the markdown export names the library.
+- Similar frames (≈) now works per library: `/similar` for film and `/commercials/shots/similar` for commercial. A mixed moodboard asks each library once and interleaves the answers. Attached-image search covers the animation and commercial libraries; film is skipped because `/search/image` only accepts a publicly reachable image URL, and the grid explains the skip.
+- Paging is per source with each endpoint's offset cap; a source whose first page is empty is not paged again, so a quiet library does not spend credits on every “Browse more”. The host cache is keyed per source.
+- Settings keeps one FrameThrower card — one token field — whose switch turns the whole animation / film / commercial family on or off; the per-library switches stay in the composer. The settings card enters the token once for all three.
+- `/anistyle/frames` and `/anistyle/similar` gain a `source` field (`animation`, `film`, `commercial`); responses keep `source: "framethrower"` and each frame now carries `kind`. Normalization also reads camelCase film metadata and flat or nested commercial fields (brand, spot, still, palette).
+- **The lightbox picks a board on hover.** Hovering 「＋ 加入情绪板」 unfolds the board list instead of opening the modal: each board shows its frame count and a ✓ when this frame is already in it, and one click adds the frame — the lightbox stays open, so the next image is one arrow key away. The foot of the list creates a board inline. Opened from inside a board, the button still adds straight to that board.
+
 ## v1.4.1 — 2026-11-06
 
 Web image search works again, and the Discover top bar drops its brand line.

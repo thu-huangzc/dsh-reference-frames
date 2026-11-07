@@ -1,9 +1,9 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
-  "description": "Reference Frames — search real animation frames from a free-form brief (text or image), then collect the ones that land into moodboards.",
+  "description": "Reference Frames — search real reference frames (animation, film stills, commercials, web) from a free-form brief (text or image), then collect the ones that land into moodboards.",
   "author": "thu-huangzc (https://github.com/thu-huangzc)",
   "contributors": [
     {

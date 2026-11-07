@@ -6,7 +6,7 @@ Describe the feeling you want and it returns real reference frames that match, w
 
 ## Install
 
-Requirements: DeepSeek Harness. A [FrameThrower](https://framethrower.ai) token (`ft_…`, free to create) unlocks the animation source; the web-image source needs no token, so the plugin still works without one.
+Requirements: DeepSeek Harness. One [FrameThrower](https://framethrower.ai) token (`ft_…`, free to create) unlocks three independent sources — animation frames, film stills and commercial shots; the web-image source needs no token, so the plugin still works without one.
 
 ```bash
 git clone git@github.com:thu-huangzc/dsh-reference-frames.git
