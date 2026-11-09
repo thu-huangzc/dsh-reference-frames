@@ -5,6 +5,6 @@
         apiToken: ''
         # 「保存为插件预设」后自动 git push（用本机 git 凭据，无需在这里放 token）
         autoPush: true
-        # 推送用这对远端 / 分支，面板的「版本更新」也查这一对
+        # 推送用这对远端 / 分支
         pushRemote: origin
         pushBranch: main

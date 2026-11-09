@@ -1,0 +1,80 @@
+name: release
+
+# Push a tag like v1.6.0 and this publishes to npm and opens the GitHub release.
+# npm authentication is trusted publishing (OIDC): configure it once on
+# npmjs.com → the package → Settings → Trusted Publishing → GitHub Actions.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # create the GitHub release
+  id-token: write   # npm trusted publishing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm 11 (trusted publishing needs >= 11.5.1)
+        run: npm install -g npm@11
+
+      - name: The tag must match package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} != package.json ${pkg}"
+            exit 1
+          fi
+
+      # idempotent: the very first release may already have been published by
+      # hand (trusted publishing can only be configured once the package exists)
+      - name: Publish to npm
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          ver="$(node -p "require('./package.json').version")"
+          if npm view "$name@$ver" version >/dev/null 2>&1; then
+            echo "::notice::$name@$ver is already on npm — skipping publish"
+            exit 0
+          fi
+          npm publish --access public --provenance
+
+      - name: Release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          node - "$version" <<'NODE' > notes.md
+          const fs = require('fs')
+          const version = process.argv[2]
+          let body = ''
+          try {
+            const text = fs.readFileSync('CHANGELOG.md', 'utf8')
+            const start = text.search(new RegExp(`^## \\[?v?${version.replace(/\./g, '\\.')}\\]?`, 'm'))
+            if (start >= 0) {
+              const rest = text.slice(start).split('\n')
+              rest.shift()
+              const end = rest.findIndex((line) => /^## /.test(line))
+              body = (end >= 0 ? rest.slice(0, end) : rest).join('\n').trim()
+            }
+          } catch {}
+          if (!body) {
+            body = `Full changelog: https://github.com/${process.env.GITHUB_REPOSITORY}/blob/${process.env.GITHUB_REF_NAME}/CHANGELOG.md`
+          }
+          process.stdout.write(`${body}\n\nFull changelog: https://github.com/${process.env.GITHUB_REPOSITORY}/blob/${process.env.GITHUB_REF_NAME}/CHANGELOG.md\n`)
+          NODE
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --verify-tag

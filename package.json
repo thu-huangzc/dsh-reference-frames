@@ -1,15 +1,24 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.5.1",
-  "private": true,
-  "type": "module",
+  "version": "1.6.0",
   "description": "Reference Frames — search real reference frames (animation, film stills, commercials, web) from a free-form brief (text or image), then collect the ones that land into moodboards.",
+  "license": "MIT",
   "author": "thu-huangzc (https://github.com/thu-huangzc)",
   "contributors": [
     {
       "name": "DeepSeek",
       "url": "https://github.com/deepseek-ai"
     }
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "reference-frames",
+    "moodboard",
+    "film",
+    "animation",
+    "image-search"
   ],
   "exports": {
     ".": "./index.js",
@@ -34,5 +43,21 @@
       "platform": "web",
       "immediately": true
     }
-  }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thu-huangzc/dsh-reference-frames.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thu-huangzc/dsh-reference-frames/issues"
+  },
+  "homepage": "https://github.com/thu-huangzc/dsh-reference-frames#readme",
+  "type": "module"
 }

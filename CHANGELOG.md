@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.0 — 2026-11-09
+
+The plugin is on npm; updates are now Harness's Plugins page.
+
+- **Published to npm.** `dsh-reference-frames` installs from the Plugins page, which saves it as an exact version and then lists newer releases with an **Update** button. The clone-and-symlink recipe becomes the development path instead of the only path.
+- **The in-plugin updater is gone.** The `git fetch` check, the round pill left of the tabs, `GET` / `POST /anistyle/update`, `POST /anistyle/restart` and the desktop relaunch helper are removed. The gear menu ends with the version this copy came from, read from the new `GET /anistyle/version`, and nothing in the panel contacts GitHub.
+- **Saved boards moved out of the package.** They live in `~/.dsh/reference-frames/moodboards.json`, seeded on first run from the boards the package ships in `presets/moodboards.json`, so a plugin update no longer overwrites them. The "Sync to GitHub" icon appears only in a git checkout — an npm install has no repo to push to, and saving just writes the local file there (`GET /anistyle/presets` reports `checkout`).
+- **Release automation.** Pushing a `vX.Y.Z` tag runs `.github/workflows/release.yml`: it checks the tag against `package.json`, publishes with npm trusted publishing plus provenance, and opens a GitHub release titled `vX.Y.Z` whose notes are that CHANGELOG section.
+
 ## v1.5.1 — 2026-11-09
 
 The loading sweep is back in the light theme.

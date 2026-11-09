@@ -61,10 +61,10 @@ Boards start empty and are stored in this browser.
 
 ## Preset moodboards
 
-`presets/moodboards.json` holds optional boards to share.
+Your boards are saved to `~/.dsh/reference-frames/moodboards.json` — outside the installed package, so a plugin update never overwrites them. The first run seeds that file from the boards the package ships in `presets/moodboards.json`.
 
-- Users: when the file has content, a **Community boards** button appears on the moodboards page. Same-name boards are skipped and ids are regenerated; ignoring the button changes nothing.
-- Author: the upload icon at the right of the moodboards header (tooltip “Sync to GitHub”) writes the current boards to that file, then commits and pushes with your local git credentials by default; the icon spins while it runs.
+- Users: when the package's file has content, a **Community boards** button appears on the moodboards page. Same-name boards are skipped and ids are regenerated; ignoring the button changes nothing.
+- Author: in a checkout, the upload icon at the right of the moodboards header (tooltip “Sync to GitHub”) writes the current boards back into `presets/moodboards.json`, then commits and pushes with your local git credentials; the icon spins while it runs. An npm install has no repo to push into, so the icon is hidden there and saving just writes the local file.
 
 ```yaml
 # cordis.patch.yml
@@ -76,20 +76,10 @@ config:
 
 ## Updates
 
-The plugin is a git checkout on your machine, so the panel can check for updates itself.
+Updates belong to Harness's **Plugins** page: the plugin is published on npm, and its bundle page lists newer versions with an **Update** button that replaces the installed copy in place. Nothing inside the panel talks to GitHub.
 
-- On load the panel quietly asks the host to `git fetch` and compare local `HEAD` with `origin/<default branch>`; the host caches the answer for 10 minutes.
-- When the branch has moved, a round brand-blue button with a downward arrow appears left of the Discover / Moodboards tabs. Hovering it reads “New version available”.
-- One click is the whole flow: the button turns into a spinner while the host fast-forwards (`git merge --ff-only`) — uncommitted local edits are never touched and history is never rewritten.
-- What happens next depends on what changed:
-  - a client-only change (`client.js`, `locale/`, docs …) reloads the panel, and the new code is live;
-  - a change to host files (`index.js`, `cordis.patch.yml`, `package.json`, …) makes the host relaunch the desktop app (quit, then reopen by bundle id) so both halves boot from the new checkout. There is no confirmation dialog in this path.
-- If a task or an armed reminder is running, the app is not killed: the button becomes “Restart to apply” and one more click restarts once the work is done.
-- Opened in a plain browser rather than the desktop window, the app is never quit; a toast asks you to restart DeepSeek Harness yourself.
-- Failures (offline, a merge blocked by local changes, a diverged branch, not on the default branch) are reported in a toast and the button returns to its normal state.
-- The gear menu ends with the current version and **Check for updates**, which forces a check past the cache.
-
-It reuses `pushRemote` / `pushBranch` from `cordis.patch.yml` (defaults `origin` / `main`).
+- Install from npm (Plugins page → 添加插件) and the version list appears on its own; a `link:` checkout gets no list, so update that with `git pull` and a restart.
+- The gear menu ends with the version this copy came from — a label, no button.
 
 ## Token & cost
 
@@ -104,7 +94,7 @@ Animation frames cost about 4 credits per search, film stills and commercial sho
 | `index.js` | Host half: proxies the three FrameThrower libraries (animation / film / commercials) and web images (DuckDuckGo / Bing fallback), image proxy, caches searches per source, caches the style vocabulary for 24h, rewrites the brief and reads attached images for web queries with the default model, reads/writes presets |
 | `client.js` | Browser half: panel UI, source switches, AI switch, moodboards in localStorage |
 | `cordis.patch.yml` | Plugin row and config |
-| `presets/moodboards.json` | Optional shared moodboards |
+| `presets/moodboards.json` | Shared moodboards shipped with the package (the live copy is `~/.dsh/reference-frames/moodboards.json`) |
 | `locale/*.json` | Title and description shown in the plugin manager |
 
 - `POST /anistyle/interpret` — `{ text }` → `{ source: 'model'|'none', params }`
@@ -114,17 +104,16 @@ Animation frames cost about 4 credits per search, film stills and commercial sho
 - `POST /anistyle/web` — `{ query, limit, offset }` → `{ source: 'chrome', frames }` (market inferred from the query script)
 - `GET /anistyle/img?u=` — image proxy (same-origin, cached, private hosts rejected, size/type limited)
 - `POST /anistyle/similar` — `{ source?, frameId | frameIds | image, by?, limit }` (film needs ids; commercial maps ids to shots and an image to `/commercials/shots/image`)
-- `GET /anistyle/presets` / `POST /anistyle/presets` — read / write the preset file
+- `GET /anistyle/presets` — `{ boards, checkout }`; `checkout` says whether this install can push boards back to the repo
+- `POST /anistyle/presets` — write the boards to the user's data file; pushes only from a checkout
 - `POST /anistyle/clear-cache` — clear all in-memory caches (frame / web / image / interpret / vocabulary)
 - `GET /anistyle/last` — last upstream response (diagnostics)
-- `GET /anistyle/update` — `{ ok, current, latest, behind, ahead, commits, head }`, cached host-side for 10 minutes; `?refresh=1` forces a check
-- `POST /anistyle/update` — fast-forward the checkout to `origin/<branch>`; returns `{ ok, from, to, action }` (`reload` / `restart` / `busy` / `manual`) or why it did not happen
-- `POST /anistyle/restart` — quit and relaunch the desktop app when nothing is running, so the host loads the new code
+- `GET /anistyle/version` — the installed version, shown at the foot of the gear menu
 
 ## Maintenance
 
-- The plugin directory is symlinked into the profile; there is only one copy of the code.
-- `client.js` → refresh the page. `index.js` / `cordis.patch.yml` → restart the app.
+- Two ways in: the npm copy under `~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames` (what users run), or a `link:`ed checkout for development.
+- In a checkout: `client.js` → refresh the page; `index.js` / `cordis.patch.yml` → restart the app. In an npm install, edit the checkout and publish — the change arrives through the Plugins page.
 - Check syntax with `node --check client.js && node --check index.js`.
-- Renaming requires four matching values: package `name`, `cordis.patch.yml` `name`, `client.js` `id`, and the symlink / profile entries.
-- Release: bump `package.json`, add a `CHANGELOG.md` entry, `git tag -a vX.Y.Z`, then push the branch and the tag.
+- Renaming requires four matching values: package `name`, `cordis.patch.yml` `name`, `client.js` `id`, and the profile entries.
+- Release: bump `package.json`, add a `CHANGELOG.md` entry, commit, then push a `vX.Y.Z` tag. `.github/workflows/release.yml` publishes to npm (trusted publishing, no OTP) and opens the GitHub release titled `vX.Y.Z`.

@@ -264,26 +264,7 @@ window.__ModuleLoader__.load({
         aiNeeded: "需要 AI检索",
         aiNeededBody: "FrameThrower 按英文的单帧画面描述匹配，任何非英文原文（中文、日文、法文……）只会让它退回默认结果。打开右下角的 AI检索，让模型把它写成英文再搜。",
         aiNeededCta: "打开 AI检索并重试",
-        updateAvailable: "版本更新",
-        updateTip: "检测到新版本",
-        updateUpToDate: "已是最新版本",
-        updateUnavailable: "更新检查不可用",
-        updateCheck: "检查更新",
-        updateChecking: "正在检查……",
-        updateInstall: "立即更新",
-        updateApplying: "更新中",
-        updateReloading: "已更新",
-        updateRestarting: "重启中",
-        updatePendingRestart: "重启生效",
-        updateBusyRestart: "已更新。有任务在跑，等它跑完再点「重启生效」。",
-        updateManualRestart: "已更新；重启 DeepSeek Harness 后生效",
-        updateOffline: "连不上 GitHub，检查网络后再试。",
-        updateNoRepo: "这个安装不是 git 检出，无法检查更新。",
-        updateNoBranch: "找不到主分支，无法检查更新。",
-        updateConflict: "本地改动挡住了这次更新，先提交或还原再试。",
-        updateWrongBranch: "当前不在主分支上，先切回主分支再更新。",
-        updateDiverged: "本地有未推送的提交，和主分支分叉了；先推送或合并本地提交，再来更新。",
-        updateFailedBody: "没能完成更新。",
+        version: "版本",
       },
       en: {
         nav: "Reference Frames",
@@ -429,26 +410,7 @@ window.__ModuleLoader__.load({
         aiNeeded: "AI search needed",
         aiNeededBody: "FrameThrower matches English frame descriptions; a brief in any other language — Chinese, Japanese, French, and so on — only gets its default page back. Turn on AI search in the composer to have it written in English first.",
         aiNeededCta: "Turn on AI search and retry",
-        updateAvailable: "Update available",
-        updateTip: "New version available",
-        updateUpToDate: "Up to date",
-        updateUnavailable: "Update check unavailable",
-        updateCheck: "Check for updates",
-        updateChecking: "Checking…",
-        updateInstall: "Update now",
-        updateApplying: "Updating…",
-        updateReloading: "Updated",
-        updateRestarting: "Restarting…",
-        updatePendingRestart: "Restart to apply",
-        updateBusyRestart: "Updated. Tasks are running — click “Restart to apply” once they finish.",
-        updateManualRestart: "Updated — restart DeepSeek Harness to load it",
-        updateOffline: "Cannot reach GitHub — check the network and try again.",
-        updateNoRepo: "This install is not a git checkout, so it cannot check for updates.",
-        updateNoBranch: "The main branch was not found.",
-        updateConflict: "Local changes blocked this update — commit or revert them first.",
-        updateWrongBranch: "Not on the main branch — switch back to it first.",
-        updateDiverged: "Your branch and main have diverged — push or merge your local commits first.",
-        updateFailedBody: "The update did not finish.",
+        version: "Version",
       },
     }
 
@@ -648,12 +610,6 @@ window.__ModuleLoader__.load({
         try { detail = (await response.json()).error || '' } catch {}
         throw new Error(detail || `HTTP ${response.status}`)
       }
-      return response.json()
-    }
-
-    async function getJson(path) {
-      const response = await fetch(path, { headers: { Accept: 'application/json' } })
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
       return response.json()
     }
 
@@ -1192,30 +1148,8 @@ window.__ModuleLoader__.load({
         }))
     }
 
-    function UpdateIcon({ size }) {
-      const edge = size || 14
-      return h('svg', {
-        width: edge, height: edge, viewBox: '0 0 16 16', fill: 'none',
-        'aria-hidden': true, style: { display: 'block' },
-      },
-        h('path', { d: 'M8 3v7.4', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' }),
-        h('path', { d: 'M4.7 7.3 8 10.6l3.3-3.3', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }))
-    }
-
-    function Settings({ drafts, configured, enabled, onToggle, onToggleGroup, onDraft, onSave, onClear, onClose, lang, onChooseLang, version, updateState, onCheckUpdate, onUpdate }) {
+    function Settings({ drafts, configured, enabled, onToggle, onToggleGroup, onDraft, onSave, onClear, onClose, lang, onChooseLang, version }) {
       const T = useT()
-      const info = updateState && updateState.info ? updateState.info : null
-      const checking = Boolean(updateState && updateState.status === 'checking')
-      const pending = Boolean(info && info.ok && info.behind > 0)
-      const stateLabel = checking
-        ? T('updateChecking')
-        : pending
-          ? T('updateAvailable') + (info.latest ? ' · v' + info.latest : '')
-          : info && info.ok
-            ? T('updateUpToDate')
-            : updateState && updateState.status === 'error'
-              ? T('updateUnavailable')
-              : ''
       const language = h('section', { className: 'ase-source' },
         h('div', { className: 'ase-source-head' }, h('strong', null, T('language'))),
         h('div', { className: 'ase-lang-opts' },
@@ -1277,15 +1211,10 @@ window.__ModuleLoader__.load({
             ? h('a', { className: 'ase-source-docs', href: source.docs, target: '_blank', rel: 'noreferrer' }, T('getToken') + ' ↗')
             : null)
       })
+      // the version is the one npm put here; Harness's Plugins page owns updates
       const about = h('section', { className: 'ase-about' },
-        h('span', { className: 'ase-about-ver' }, version ? 'v' + version : '—'),
-        h('span', { className: 'ase-about-state' + (pending ? ' is-new' : '') }, stateLabel),
-        h('button', {
-          type: 'button',
-          className: 'ase-ghost-link ase-about-action',
-          disabled: checking,
-          onClick: pending ? onUpdate : onCheckUpdate,
-        }, pending ? T('updateInstall') : T('updateCheck')))
+        h('span', { className: 'ase-about-label' }, T('version')),
+        h('span', { className: 'ase-about-ver' }, version ? 'v' + version : '—'))
       return h('div', { className: 'ase-scrim', onClick: onClose },
         h('div', { className: 'ase-modal ase-settings', onClick: (event) => event.stopPropagation(), role: 'dialog', 'aria-modal': true },
           h('div', { className: 'ase-settings-head' },
@@ -1301,22 +1230,6 @@ window.__ModuleLoader__.load({
           language,
           sources,
           about))
-    }
-
-    function updateFailureMessage(result, T) {
-      const reason = result && result.reason
-      const key = {
-        offline: 'updateOffline',
-        'no-repo': 'updateNoRepo',
-        'no-branch': 'updateNoBranch',
-        conflict: 'updateConflict',
-        diverged: 'updateDiverged',
-        'wrong-branch': 'updateWrongBranch',
-      }[reason]
-      const head = key ? T(key) : T('updateFailedBody')
-      if (reason === 'diverged') return head
-      const detail = result && result.detail ? '（' + String(result.detail).slice(0, 160) + '）' : ''
-      return head + detail
     }
 
     function ClipboardIcon() {
@@ -2169,90 +2082,9 @@ window.__ModuleLoader__.load({
       const [communityOpen, setCommunityOpen] = useState(false)
       const [drafts, setDrafts] = useState({})
       const [enabledSources, setEnabledSources] = useState(loadSources)
-      const [updateState, setUpdateState] = useState({ status: 'idle', info: null })
-      // idle | applying | reloading | restarting | pending (updated, restart held back by running work)
-      const [updateUi, setUpdateUi] = useState('idle')
-      const scroller = useRef(null)
-
-      const checkUpdate = useCallback(async (force) => {
-        setUpdateState((current) => ({ status: 'checking', info: current.info }))
-        try {
-          const info = await getJson('/anistyle/update' + (force ? '?refresh=1' : ''))
-          setUpdateState({ status: 'ok', info })
-          return info
-        } catch {
-          // an older host without the route simply has no update pill
-          setUpdateState({ status: 'error', info: null })
-          return null
-        }
-      }, [])
-
-      const markUpdated = useCallback((to) => {
-        setUpdateState((current) => ({
-          status: 'ok',
-          info: {
-            ...(current.info || {}),
-            ok: true,
-            behind: 0,
-            ahead: 0,
-            commits: [],
-            head: '',
-            current: to || (current.info && current.info.current) || '',
-            latest: to || (current.info && current.info.latest) || '',
-            checkedAt: Date.now(),
-          },
-        }))
-      }, [])
-
-      const isDesktop = () => {
-        try { return typeof window !== 'undefined' && 'dshDesktop' in window } catch { return false }
-      }
-
-      // one click: fast-forward, then either reload the page (client-only change)
-      // or relaunch the app (host code changed); no dialog in between
-      const runUpdate = useCallback(async () => {
-        setUpdateUi((current) => (current === 'applying' || current === 'restarting' || current === 'reloading' ? current : 'applying'))
-        try {
-          const result = await api('/anistyle/update', { desktop: isDesktop() })
-          if (!result || !result.ok) {
-            setUpdateUi('idle')
-            setToast(updateFailureMessage(result || {}, t))
-            return
-          }
-          markUpdated(result.to)
-          if (result.action === 'restart') { setUpdateUi('restarting'); return }
-          if (result.action === 'busy') {
-            setUpdateUi('pending')
-            setToast(t('updateBusyRestart'))
-            return
-          }
-          if (result.action === 'reload') {
-            setUpdateUi('reloading')
-            window.setTimeout(() => { try { window.location.reload() } catch {} }, 600)
-            return
-          }
-          setUpdateUi('idle')
-          setToast(t('updateManualRestart'))
-        } catch (error) {
-          setUpdateUi('idle')
-          setToast(updateFailureMessage({ reason: 'call-failed', detail: String((error && error.message) || error) }, t))
-        }
-      }, [t, markUpdated])
-
-      // the app kept running because work was in flight; try the restart again
-      const runRestart = useCallback(async () => {
-        try {
-          const result = await api('/anistyle/restart', { desktop: isDesktop() })
-          if (result && result.ok) { setUpdateUi('restarting'); return }
-          if (result && result.reason === 'busy') { setToast(t('updateBusyRestart')); return }
-          setUpdateUi('idle')
-          setToast(t('updateManualRestart'))
-        } catch {
-          setUpdateUi('idle')
-          setToast(t('updateManualRestart'))
-        }
-      }, [t])
-
+      const [version, setVersion] = useState('')
+      // a git checkout can push saved boards back to the repo; an npm install cannot
+      const [canPushPresets, setCanPushPresets] = useState(true)
       const toggleSource = useCallback((id) => {
         setEnabledSources((list) => {
           const next = list.includes(id)
@@ -2295,13 +2127,23 @@ window.__ModuleLoader__.load({
         let alive = true
         fetch('/anistyle/presets', { headers: { Accept: 'application/json' } })
           .then((response) => (response.ok ? response.json() : null))
-          .then((data) => { if (alive && data && Array.isArray(data.boards)) setPresets(data.boards) })
+          .then((data) => {
+            if (!alive || !data) return
+            if (Array.isArray(data.boards)) setPresets(data.boards)
+            if (typeof data.checkout === 'boolean') setCanPushPresets(data.checkout)
+          })
           .catch(() => {})
         return () => { alive = false }
       }, [])
 
-      // one quiet check per page load; the host caches the answer for 10 minutes
-      useEffect(() => { checkUpdate(false) }, [checkUpdate])
+      useEffect(() => {
+        let alive = true
+        fetch('/anistyle/version', { headers: { Accept: 'application/json' } })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { if (alive && data && typeof data.version === 'string') setVersion(data.version) })
+          .catch(() => {})
+        return () => { alive = false }
+      }, [])
 
       useEffect(() => {
         try {
@@ -3161,36 +3003,10 @@ window.__ModuleLoader__.load({
       )
 
       const hasToken = Boolean(readToken())
-      const updateInfo = updateState.status === 'ok' ? updateState.info : null
-      const updateReady = Boolean(updateInfo && updateInfo.ok && updateInfo.behind > 0)
-      const updateBusy = updateUi === 'applying' || updateUi === 'restarting' || updateUi === 'reloading'
-      // the pill stays put through the update, after `behind` has already dropped to zero
-      const showUpdate = updateBusy || updateUi === 'pending' || updateReady
-      // the round button has no label, so the tooltip carries the whole story
-      const updateTip = {
-        applying: t('updateApplying'),
-        reloading: t('updateReloading'),
-        restarting: t('updateRestarting'),
-        pending: t('updatePendingRestart'),
-      }[updateUi] || t('updateTip')
 
       return h('div', { className: 'ase-root', ref: scroller },
         h('div', { className: 'ase-wrap' },
           h('header', { className: 'ase-topbar' },
-            showUpdate
-              ? h('button', {
-                type: 'button',
-                className: 'ase-update ase-tip',
-                'data-tip': updateTip,
-                'aria-label': updateTip,
-                disabled: updateBusy,
-                onClick: updateUi === 'pending' ? runRestart : runUpdate,
-              },
-                updateBusy
-                  ? h('svg', { className: 'ase-spin', width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
-                    h('circle', { cx: 8, cy: 8, r: 5.9, stroke: 'currentColor', strokeWidth: 2, strokeDasharray: '27 10', strokeLinecap: 'round' }))
-                  : h(UpdateIcon, { size: 14 }))
-              : null,
             h('nav', { className: 'ase-tabs' },
               h('button', { type: 'button', className: 'ase-tab' + (tab === 'discover' ? ' ase-tab--on' : ''), onClick: () => setTab('discover') }, t('discover')),
               h('button', {
@@ -3282,7 +3098,7 @@ window.__ModuleLoader__.load({
                 onPin: togglePin,
                 presets,
                 onOpenPresets: () => setCommunityOpen(true),
-                onSavePreset: savePresets,
+                onSavePreset: canPushPresets ? savePresets : null,
                 savingPreset,
                 onOpen: (id) => setActiveBoard(id),
                 onDelete: deleteBoard,
@@ -3342,10 +3158,7 @@ window.__ModuleLoader__.load({
             onClose: () => setSettingsOpen(false),
             lang,
             onChooseLang,
-            version: updateInfo && updateInfo.current ? updateInfo.current : '',
-            updateState,
-            onCheckUpdate: () => { checkUpdate(true) },
-            onUpdate: updateUi === 'pending' ? runRestart : runUpdate,
+            version,
           })
           : null,
         communityOpen
@@ -3503,14 +3316,6 @@ window.__ModuleLoader__.load({
 .ase-tab{border:0;background:none;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12.5px;padding:6px 14px;border-radius:7px;cursor:pointer}
 .ase-tab:hover{color:var(--dsw-alias-label-primary)}
 .ase-tab--on{background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);box-shadow:0 1px 2px rgba(0,0,0,.18)}
-.ase-update{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:30px;height:30px;min-width:30px;padding:0;border:0;border-radius:50%;corner-shape:round;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);cursor:pointer;transition:transform .14s,opacity .14s,box-shadow .14s;box-shadow:0 1px 2px rgba(0,0,0,.18)}
-.ase-update:hover:not([disabled]){transform:translateY(-1px);box-shadow:0 4px 12px -4px color-mix(in srgb,var(--dsw-alias-brand-primary) 70%,transparent)}
-.ase-update:active:not([disabled]){transform:none}
-.ase-update:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}
-.ase-update svg{display:block}
-.ase-update[disabled]{cursor:default;opacity:.72;box-shadow:none}
-.ase-update.ase-tip::after{right:auto;left:50%;transform:translate(-50%,-2px);z-index:8}
-.ase-update.ase-tip:hover::after{transform:translate(-50%,0)}
 .ase-ghost-link{background:none;border:0;padding:4px 2px;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12.5px;cursor:pointer;border-bottom:1px solid transparent}
 .ase-ghost-link:hover{color:var(--dsw-alias-label-primary);border-bottom-color:var(--dsw-alias-border-l2)}
 .ase-h1{font-size:32px;line-height:1.2;font-weight:650;letter-spacing:-.022em;margin:10px 0 8px}
@@ -3702,10 +3507,8 @@ window.__ModuleLoader__.load({
 .ase-iconbtn:hover{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}
 .ase-settings{width:min(520px,100%)}
 .ase-about{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--dsw-alias-border-l1);font-size:11px;color:var(--dsw-alias-label-secondary)}
-.ase-about-ver{flex:0 0 auto;font:500 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dsw-alias-label-primary)}
-.ase-about-state{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ase-about-state.is-new{color:var(--dsw-alias-brand-primary)}
-.ase-about-action{flex:0 0 auto;margin-left:auto;font-size:11px}
+.ase-about-label{flex:0 0 auto}
+.ase-about-ver{flex:0 0 auto;margin-left:auto;font:500 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dsw-alias-label-primary)}
 .ase-btn:disabled{opacity:.45;cursor:default}
 .ase-settings-head{margin-bottom:14px}
 .ase-source{border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:var(--dsw-alias-bg-layer-1)}

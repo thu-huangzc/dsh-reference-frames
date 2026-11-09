@@ -62,10 +62,10 @@ Pinterest 官方 API 的公开关键词搜索只有 `GET /v5/search/partner/pins
 
 ## 预设情绪板
 
-`presets/moodboards.json` 是可选的分享用情绪板。
+你自己的情绪板保存在 `~/.dsh/reference-frames/moodboards.json` —— 在安装目录之外，插件更新不会覆盖它。首次运行会从包内 `presets/moodboards.json` 播种。
 
-- 用户：文件有内容时，情绪板页会出现「社区情绪板」。同名跳过、id 重新生成；不点则完全不受影响。
-- 作者：情绪板页右上角的上传图标（悬停提示「同步至 GitHub」），点击后把当前情绪板写入该文件，默认用本机 git 凭据提交并推送；上传过程中图标变成转圈。
+- 用户：包内预设文件有内容时，情绪板页会出现「社区情绪板」。同名跳过、id 重新生成；不点则完全不受影响。
+- 作者：在 git 检出里，情绪板页右上角的上传图标（悬停提示「同步至 GitHub」）会把当前情绪板写回 `presets/moodboards.json`，默认用本机 git 凭据提交并推送，上传过程中图标变成转圈。npm 安装没有可推送的仓库，这个图标会隐藏，保存只写本地文件。
 
 ```yaml
 # cordis.patch.yml
@@ -77,20 +77,10 @@ config:
 
 ## 版本更新
 
-插件本身就是本机的一份 git 检出，所以面板自己就能查更新。
+更新交给 Harness 的 **插件** 页：插件发布在 npm 上，bundle 详情页会列出更新的版本，点 **更新** 就地替换已装的副本。面板本身不再联系 GitHub。
 
-- 面板打开时悄悄问一次宿主：`git fetch` 后比较本地 `HEAD` 与 `origin/<主分支>`；结果在宿主侧缓存 10 分钟。
-- 有新提交时，「发现 / 情绪板」左边出现一个蓝色圆形按钮，中间是向下的箭头，悬停提示「检测到新版本」。
-- 点一下就开始：按钮原地转圈，宿主做 `git merge --ff-only`——不碰未提交的改动，也不改写历史。
-- 更新落下来之后：
-  - 只动了 `client.js`、`locale/`、文档这类文件——面板自动刷新，新代码直接生效；
-  - 动到了宿主（`index.js`、`cordis.patch.yml`、`package.json` 等）——宿主自动重启应用（退出后按 bundle id 重新拉起），两半都从新代码启动，不会再弹确认框。
-- 当时如果有任务在跑或还有已排程的提醒，不会硬重启：按钮变成「重启生效」，等任务结束再点一下重启即可。
-- 在普通浏览器里打开（不是桌面应用窗口）时不会去重启应用，只提示「已更新；重启 DeepSeek Harness 后生效」，免得把你正在用的 web 服务停掉。
-- 失败（离线、本地改动挡住合并、本地和主分支分叉、不在主分支）用一条 toast 说明原因，按钮恢复原样。
-- 齿轮菜单最底下一行是当前版本和「检查更新」，点它会强制重查、绕过缓存。
-
-重启用的还是 `cordis.patch.yml` 里那对 `pushRemote` / `pushBranch`（默认 `origin` / `main`），和预设推送一致。
+- 从 npm 安装（插件页 → 添加插件）后版本列表自然出现；`link:` 链接安装不会显示版本列表，那种装法改完 `git pull` 再重启。
+- 齿轮菜单最底下一行只显示当前版本号，没有按钮。
 
 ## Token 与费用
 
@@ -105,7 +95,7 @@ config:
 | `index.js` | 宿主半：代理 FrameThrower 三个库（动画 / 电影 / 广告）、网页图片（DuckDuckGo / Bing 兜底）与图片代理、按源缓存检索、缓存 24h 画风词表、用默认模型改写需求、读图生成网页检索词、读写预设 |
 | `client.js` | 浏览器半：面板 UI、检索源开关、AI 开关、情绪板（localStorage） |
 | `cordis.patch.yml` | 插件行与配置 |
-| `presets/moodboards.json` | 可选的分享情绪板 |
+| `presets/moodboards.json` | 随包发布的分享情绪板（实际使用的一份在 `~/.dsh/reference-frames/moodboards.json`） |
 | `locale/*.json` | 插件管理页显示的标题与描述 |
 
 - `POST /anistyle/interpret` — `{ text }` → `{ source: 'model'|'none', params }`
@@ -115,17 +105,16 @@ config:
 - `POST /anistyle/web` — `{ query, limit, offset }` → `{ source: 'chrome', frames }`（检索市场按查询文本的语种判断）
 - `GET /anistyle/img?u=` — 图片代理（同源、带缓存、拒绝内网地址、限制大小与类型）
 - `POST /anistyle/similar` — `{ source?, frameId | frameIds | image, by?, limit }`（电影只能用 id；广告把 id 转成 shot_ids，图片转给 `/commercials/shots/image`）
-- `GET /anistyle/presets` / `POST /anistyle/presets` — 读取 / 写入预设文件
+- `GET /anistyle/presets` — `{ boards, checkout }`；`checkout` 表示这份安装能不能把情绪板推回仓库
+- `POST /anistyle/presets` — 把情绪板写入用户数据目录；只有 git 检出才会推送
 - `POST /anistyle/clear-cache` — 清空全部内存缓存（帧 / 网页 / 图片 / 改写 / 画风词表）
 - `GET /anistyle/last` — 最近一次上游响应（诊断）
-- `GET /anistyle/update` — `{ ok, current, latest, behind, ahead, commits, head }`，宿主侧缓存 10 分钟；`?refresh=1` 强制重查
-- `POST /anistyle/update` — 只做 fast-forward 合并到 `origin/<主分支>`，返回 `{ ok, from, to, action }`（`reload` / `restart` / `busy` / `manual`）或失败原因
-- `POST /anistyle/restart` — 任务空闲时退出并重新拉起桌面应用，让宿主也加载新代码
+- `GET /anistyle/version` — 当前安装的版本号，齿轮菜单底部显示它
 
 ## 维护
 
-- 插件目录软链接进 profile，代码只有一份。
-- 改 `client.js` 刷新页面；改 `index.js` / `cordis.patch.yml` 要重启应用。
+- 两种装法：npm 副本在 `~/.dsh/profiles/<profile>/node_modules/dsh-reference-frames`（用户跑的就是它），开发时用 `link:` 链接检出。
+- 检出里：改 `client.js` 刷新页面；改 `index.js` / `cordis.patch.yml` 重启应用。npm 安装里要先在检出改好再发版，改动经插件页更新下来。
 - 语法自检：`node --check client.js && node --check index.js`。
-- 改名要同步四处：`package.json` 的 `name`、`cordis.patch.yml` 的 `name`、`client.js` 的 `id`，以及 profile 里的软链接与登记。
-- 发布：改 `package.json` 版本、写 `CHANGELOG.md`、`git tag -a vX.Y.Z`，然后推分支和 tag。
+- 改名要同步四处：`package.json` 的 `name`、`cordis.patch.yml` 的 `name`、`client.js` 的 `id`，以及 profile 里的登记。
+- 发布：改 `package.json` 版本、写 `CHANGELOG.md`、提交，然后推 `vX.Y.Z` 标签。`.github/workflows/release.yml` 用 trusted publishing 发 npm（不需要 OTP），并以同名标题 `vX.Y.Z` 建 GitHub release。
