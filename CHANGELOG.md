@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.2 — 2026-11-09
+
+The panel renders again.
+
+- **1.6.0 removed the update pill but left its `ref` behind.** The page root kept `ref: scroller` after `const scroller = useRef(null)` was deleted with the updater, so the very first render threw `ReferenceError: scroller is not defined`: the main area stayed blank while the sidebar kept working, so opening Reference Frames looked like a dead white page. The dangling `ref` is gone — it was never read, even before the updater existed.
+
 ## v1.6.1 — 2026-11-09
 
 The guide and changelog now ship with the npm package.

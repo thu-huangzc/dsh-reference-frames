@@ -3004,7 +3004,7 @@ window.__ModuleLoader__.load({
 
       const hasToken = Boolean(readToken())
 
-      return h('div', { className: 'ase-root', ref: scroller },
+      return h('div', { className: 'ase-root' },
         h('div', { className: 'ase-wrap' },
           h('header', { className: 'ase-topbar' },
             h('nav', { className: 'ase-tabs' },
