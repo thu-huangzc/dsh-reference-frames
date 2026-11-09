@@ -1,6 +1,6 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Reference Frames — search real reference frames (animation, film stills, commercials, web) from a free-form brief (text or image), then collect the ones that land into moodboards.",
   "license": "MIT",
   "author": "thu-huangzc (https://github.com/thu-huangzc)",
@@ -33,7 +33,9 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
-    "presets/moodboards.json"
+    "presets/moodboards.json",
+    "CHANGELOG.md",
+    "docs/*.md"
   ],
   "dsh": {
     "bundle": {

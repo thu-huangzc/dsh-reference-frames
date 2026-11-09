@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.1 — 2026-11-09
+
+The guide and changelog now ship with the npm package.
+
+- **`docs/*.md` and `CHANGELOG.md` are in the tarball.** 1.6.0 shipped the README, whose links point at `docs/GUIDE.md` and `CHANGELOG.md` — both were missing from the package, so those links 404'd for anyone installing from npm. They now travel with the package.
+- Nothing else changes; the plugin code is byte-identical to 1.6.0.
+
 ## v1.6.0 — 2026-11-09
 
 The plugin is on npm; updates are now Harness's Plugins page.
