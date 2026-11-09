@@ -1,6 +1,6 @@
 {
   "name": "dsh-reference-frames",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "type": "module",
   "description": "Reference Frames — search real reference frames (animation, film stills, commercials, web) from a free-form brief (text or image), then collect the ones that land into moodboards.",

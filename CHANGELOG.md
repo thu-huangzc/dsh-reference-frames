@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.1 — 2026-11-09
+
+The loading sweep is back in the light theme.
+
+- **Skeleton cards shimmer again in light mode.** Both `--dsw-alias-bg-layer-1` and `--dsw-alias-bg-layer-2` resolve to `#fff` in the light theme, so the skeleton gradient collapsed into three identical stops and the sweep was invisible while a search was running; the dark theme, where the two layers differ, was unaffected. The light theme now builds its highlight from `label-primary` at 4% — a soft `#f5f5f5` band, matched to the contrast the dark theme always had — and the dark theme keeps its original `layer-1` band behind `[data-ds-dark-theme]`, so it looks exactly as before.
+- The busy sweep shown while a frame is being added hard-coded `rgba(255,255,255,.14)`, which was equally invisible on white. It now uses `label-primary` at 14% — the same white in the dark theme, a visible sweep in the light one.
+
 ## v1.5.0 — 2026-11-07
 
 FrameThrower is now three selectable reference sources, and the lightbox picks a moodboard on hover.

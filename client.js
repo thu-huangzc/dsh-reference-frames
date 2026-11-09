@@ -3641,7 +3641,7 @@ window.__ModuleLoader__.load({
 .ase-warn{margin:0 0 12px;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .ase-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
 .ase-tile--busy .ase-thumb img{opacity:.4;filter:saturate(.6)}
-.ase-tile--busy .ase-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.14) 50%,transparent 80%);background-size:220% 100%;animation:ase-busy-sweep 1.1s linear infinite}
+.ase-tile--busy .ase-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,color-mix(in srgb,var(--dsw-alias-label-primary) 14%,transparent) 50%,transparent 80%);background-size:220% 100%;animation:ase-busy-sweep 1.1s linear infinite}
 @keyframes ase-busy-sweep{from{background-position:120% 0}to{background-position:-120% 0}}
 .ase-tile{margin:0;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;overflow:hidden;background:var(--dsw-alias-bg-layer-1);transition:border-color .16s;display:flex;flex-direction:column}
 .ase-tile:hover{border-color:var(--dsw-alias-border-l2)}
@@ -3660,7 +3660,8 @@ window.__ModuleLoader__.load({
 .ase-badge{flex:0 0 auto;font:500 9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.04em;text-transform:uppercase;color:var(--dsw-alias-label-secondary);border:1px solid var(--dsw-alias-border-l1);border-radius:999px;padding:2px 5px}
 .ase-tile figcaption p{margin:0;font-size:11px;line-height:1.5;color:var(--dsw-alias-label-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .ase-tile--skeleton{border-style:dashed}
-.ase-skeleton,.ase-tile--skeleton .ase-thumb{background:linear-gradient(100deg,var(--dsw-alias-bg-layer-2) 40%,var(--dsw-alias-bg-layer-1) 50%,var(--dsw-alias-bg-layer-2) 60%);background-size:200% 100%;animation:ase-shimmer 1.4s infinite linear}
+.ase-skeleton,.ase-tile--skeleton .ase-thumb{background:linear-gradient(100deg,var(--dsw-alias-bg-layer-2) 40%,color-mix(in srgb,var(--dsw-alias-label-primary) 4%,var(--dsw-alias-bg-layer-2)) 50%,var(--dsw-alias-bg-layer-2) 60%);background-size:200% 100%;animation:ase-shimmer 1.4s infinite linear}
+[data-ds-dark-theme] .ase-skeleton,[data-ds-dark-theme] .ase-tile--skeleton .ase-thumb{background:linear-gradient(100deg,var(--dsw-alias-bg-layer-2) 40%,var(--dsw-alias-bg-layer-1) 50%,var(--dsw-alias-bg-layer-2) 60%);background-size:200% 100%}
 .ase-skeleton{border-radius:10px}
 @keyframes ase-shimmer{from{background-position:120% 0}to{background-position:-20% 0}}
 .ase-empty{border:1px dashed var(--dsw-alias-border-l2);border-radius:14px;padding:32px 24px;text-align:center}
